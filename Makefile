@@ -1,6 +1,7 @@
 ## CONFIGURATION VARIABLES
 BINARY_NAME = greenlight
-
+PORT = 4000
+ENVIRONMENT = development
 
 ## COMMANDS LIST
 # build: build the application with extra flags to get the smallest executable
@@ -13,7 +14,7 @@ build:
 # run: build and run the application
 run: build
 	@echo "Running application..."
-	@env ./${BINARY_NAME}
+	@env ./${BINARY_NAME} -port=${PORT} -env=${ENVIRONMENT}
 
 # start: alias to run
 start: run
