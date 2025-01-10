@@ -43,9 +43,8 @@ func main() {
 		logger: logger,
 	}
 
-	// Create a new mux.
-	mux := http.NewServeMux()
-	mux.HandleFunc("/v1/healthcheck", app.healthcheckHandler)
+	// Get the configured mux with httprouter.
+	mux := app.routes()
 
 	// Start the server and check for errors.
 	server := &http.Server{

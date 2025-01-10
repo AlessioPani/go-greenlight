@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// healthcheckHandler is the handler that shows information of the application.
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "status: available")
 	fmt.Fprintf(w, "environment: %s\n", app.config.env)
