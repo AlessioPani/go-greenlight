@@ -8,8 +8,10 @@ import (
 
 // routes configure the application mux and return it back to the main function.
 func (app *application) routes() http.Handler {
-	// Initialize a new httprouter router instance.
+	// Initialize a new httprouter router instance with a basic configuration.
 	router := httprouter.New()
+	router.RedirectTrailingSlash = true
+	router.RedirectFixedPath = true
 
 	// Configure method, paths and handlers.
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
