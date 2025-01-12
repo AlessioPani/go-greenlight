@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -39,6 +41,51 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	w.Write(js)
+
+	return nil
+}
+
+// Define a readJSON() helper for reading requests. This takes the destination
+// http.ResponseWriter, the source *http.Request and the target variable dst and check for
+// several common errors regarding decoding a JSON (request body).
+func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
+	err := json.NewDecoder(r.Body).Decode(&dst)
+	if err != nil {
+		var syntaxError *json.SyntaxError
+		var unmarshalTypeError *json.UnmarshalTypeError
+		var invalidUnmarshalError *json.InvalidUnmarshalError
+
+		switch {
+		// Check for SyntaxError errors.
+		case errors.As(err, &syntaxError):
+			return fmt.Errorf("body contains badly-formed JSON (at character %d)", syntaxError.Offset)
+
+		// Check for a generic ErrUnexpectedEOF error.
+		case errors.Is(err, io.ErrUnexpectedEOF):
+			return errors.New("body contains badly-formed JSON")
+
+		// Check for UnmarshalTypeError errors. These occur when the JSON value is the wrong type
+		// for the target destination. If the error relates to a specific field, then we include
+		// that in our error message to make it easier for the client to debug.
+		case errors.As(err, &unmarshalTypeError):
+			if unmarshalTypeError.Field != "" {
+				return fmt.Errorf("body contains incorrect JSON type for field %q", unmarshalTypeError.Field)
+			}
+			return fmt.Errorf("body contains incorrect JSON type (at character %d)", unmarshalTypeError.Offset)
+
+		// Check for EOF error, that occurs when the body request is empty.
+		case errors.Is(err, io.EOF):
+			return errors.New("body must not be empty")
+
+		// Check for InvalidUnmarshalError errors. These occur when we pass a nil pointer to the
+		// Decode function.
+		case errors.As(err, &invalidUnmarshalError):
+			panic(err)
+
+		default:
+			return err
+		}
+	}
 
 	return nil
 }

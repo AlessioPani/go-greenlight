@@ -11,7 +11,25 @@ import (
 // createMovieHandler is the handler that creates a movie.
 // Method: POST
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "create a new movie")
+	// Anonymous struct to hold the information that we expect to be in the
+	// HTTP request body. This struct will be our *target decode destination*.
+	var input struct {
+		Title   string   `json="title"`
+		Year    int32    `json="year"`
+		Runtime int32    `json="runtime"`
+		Genres  []string `json="genres"`
+	}
+
+	// Initialize a new json.Decoder instance which reads from the request body, and
+	// then use the Decode() method to decode the body contents into the input struct.
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Send the contents of the input struct in a HTTP response.
+	fmt.Fprintf(w, "%+v\n", input)
 }
 
 // showMovieHandler is the handler that shows a movie by its ID.
