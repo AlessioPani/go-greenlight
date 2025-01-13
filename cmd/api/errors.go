@@ -44,6 +44,11 @@ func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Reque
 	app.errorResponse(w, r, http.StatusInternalServerError, message)
 }
 
+// failedValidationResponse() is a method used to send an StatusUnprocessableEntity error.
+func (app *application) failedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
+	app.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
+}
+
 // The notFoundResponse() method will be used to send a 404 Not Found status code and
 // JSON response to the client.
 func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request) {
