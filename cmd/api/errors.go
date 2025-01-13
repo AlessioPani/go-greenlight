@@ -30,7 +30,7 @@ func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, st
 
 // The badRequestResponse() method send the client a bad request error.
 func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
-	app.errorResponse(w, r, http.StatusBadRequest, err)
+	app.errorResponse(w, r, http.StatusBadRequest, err.Error())
 }
 
 // The serverErrorResponse() method will be used when our application encounters an
