@@ -29,31 +29,20 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Fill a Movie struct with the input data.
+	movie := &data.Movie{
+		Title:   input.Title,
+		Year:    input.Year,
+		Runtime: input.Runtime,
+		Genres:  input.Genres,
+	}
+
 	// Create a new instance of our custom Validator.
 	v := validator.New()
 
-	// Validate input data
-	// Title
-	v.Check(input.Title != "", "title", "must be provided")
-	v.Check(len(input.Title) <= 500, "title", "must not be more than 500 bytes long")
-
-	// Year
-	v.Check(input.Year != 0, "year", "must be provided")
-	v.Check(input.Year >= 1888, "year", "must be greater than 1888")
-	v.Check(input.Year <= int32(time.Now().Year()), "year", "must not be in the future")
-
-	// Runtime
-	v.Check(input.Runtime != 0, "runtime", "must be provided")
-	v.Check(input.Runtime > 0, "runtime", "must be a positive integer")
-
-	// Genres
-	v.Check(input.Genres != nil, "genres", "must be provided")
-	v.Check(len(input.Genres) >= 1, "genres", "must be provided at least 1 genre")
-	v.Check(len(input.Genres) <= 5, "genres", "must not contain more than 5 genres")
-	v.Check(validator.Unique(input.Genres), "genres", "must contain only unique values")
-
-	// If errors occurred while processing the input JSON, send the appropriate error.
-	if !v.Valid() {
+	// Validate the Movie data. If errors occurred while processing the input JSON,
+	// send the appropriate error.
+	if data.ValidateMovie(v, movie); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
