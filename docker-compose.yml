@@ -1,0 +1,13 @@
+services:
+  # POSTGRES
+  db:
+    image: "postgres"
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: greenlight
+    volumes:
+      - ./db-data/postgres/:/var/lib/postgresql/data

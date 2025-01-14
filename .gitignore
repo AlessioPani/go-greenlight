@@ -26,3 +26,9 @@ go.work.sum
 
 # Executable
 greenlight
+
+# Database
+db-data/
+
+# Extra
+.DS_Store
