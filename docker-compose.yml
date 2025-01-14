@@ -1,13 +1,16 @@
 services:
   # POSTGRES
-  db:
+  postgres:
     image: "postgres"
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5432:5432"
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: greenlight
+      POSTGRES_DB: postgres
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data

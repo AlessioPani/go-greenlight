@@ -28,7 +28,7 @@ go.work.sum
 greenlight
 
 # Database
-db-data/
+db-data/postgres
 
 # Extra
 .DS_Store
