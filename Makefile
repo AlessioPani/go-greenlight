@@ -2,6 +2,8 @@
 BINARY_NAME = greenlight
 PORT = 4000
 ENVIRONMENT = development
+# Only for development purpose, you should rely on your env or package like godotenv.
+DSN = "postgres://greenlight:secret_password@localhost/greenlight?sslmode=disable"
 
 ## COMMANDS LIST
 # build: build the application with extra flags to get the smallest executable
@@ -14,12 +16,12 @@ build:
 # run: build and run the application
 run: build
 	@echo "Running application..."
-	@env ./${BINARY_NAME} -port=${PORT} -env=${ENVIRONMENT}
+	@env ./${BINARY_NAME} -port=${PORT} -env=${ENVIRONMENT} -dsn=${DSN}
 
 # start: alias to run
 start: run
 
-# stop: stops the running application 
+# stop: stops the running application
 # Windows users: use @taskkill /IM ${BINARY_NAME} /F instead
 stop:
 	@echo "Stopping..."
