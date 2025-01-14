@@ -31,8 +31,12 @@ stop:
 # restart: stop and start the application
 restart: stop start
 
-# test: executes and generates coverage profile
+# test: executes tests in verbose mode
 test:
+	@env go test -v ./...
+
+# coverage: executes tests and generate coverage profile
+coverage:
 	@env go test -coverprofile=./coverage.out  ./... && go tool cover -html=./coverage.out
 
 # clean: runs go clean and deletes the executable
