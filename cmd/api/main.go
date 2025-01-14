@@ -23,6 +23,14 @@ type config struct {
 	env  string
 	db   struct {
 		dsn string
+		// maxOpenConns limits the number of open connections (active and idle) imposed
+		// by both database and infrastructure (Postgres has an hard limit of 100 connections).
+		maxOpenConns int
+		// maxIdleConns limits the number of idle connections.
+		maxIdleConns int
+		// maxIdleTime limits the max duration for a connection to be in the idle status.
+		// After this period of time, the resource will be freed up.
+		maxIdleTime time.Duration
 	}
 }
 
@@ -40,6 +48,9 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 	flag.StringVar(&cfg.db.dsn, "dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
+	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
+	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
+	flag.DurationVar(&cfg.db.maxIdleTime, "db-max-idle-time", 15*time.Minute, "PostgreSQL max connection idle time")
 	flag.Parse()
 
 	// Initialize a new structured logger.
@@ -87,6 +98,11 @@ func openDB(cfg config) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Configure the database connection pool.
+	db.SetMaxOpenConns(cfg.db.maxOpenConns)
+	db.SetMaxIdleConns(cfg.db.maxIdleConns)
+	db.SetConnMaxIdleTime(cfg.db.maxIdleTime)
 
 	// Create a context with a 5 seconds deadline.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

@@ -1,9 +1,13 @@
-## CONFIGURATION VARIABLES
+## APP CONFIGURATION VARIABLES
 BINARY_NAME = greenlight
 PORT = 4000
 ENVIRONMENT = development
-# Only for development purpose, you should rely on your env or package like godotenv.
+## DATABASE CONFIGURATION VARIABLES
+# Only for development purpose, you should rely on your env or package like godotenv to get your dns.
 DSN = "postgres://greenlight:secret_password@localhost/greenlight?sslmode=disable"
+MAX_OPEN_CONNS = 25
+MAX_IDLE_CONNS = 25
+MAX_IDLE_TIME = 15m
 
 ## COMMANDS LIST
 # build: build the application with extra flags to get the smallest executable
@@ -16,7 +20,7 @@ build:
 # run: build and run the application
 run: build
 	@echo "Running application..."
-	@env ./${BINARY_NAME} -port=${PORT} -env=${ENVIRONMENT} -dsn=${DSN}
+	@env ./${BINARY_NAME} -port=${PORT} -env=${ENVIRONMENT} -dsn=${DSN} -db-max-open-conns=${MAX_OPEN_CONNS} -db-max-idle-conns=${MAX_IDLE_CONNS} -db-max-idle-time=${MAX_IDLE_TIME}
 
 # start: alias to run
 start: run
