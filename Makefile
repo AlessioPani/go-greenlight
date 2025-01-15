@@ -41,6 +41,14 @@ test:
 coverage:
 	@env go test -coverprofile=./coverage.out  ./... && go tool cover -html=./coverage.out
 
+# migrate-up: executes db migrations
+migrate-up:
+	@env migrate -path=./migrations -database=${DSN} up
+
+# migrate-down: revert db migrations
+migrate-down:
+	@env migrate -path=./migrations -database=${DSN} down
+
 # clean: runs go clean and deletes the executable
 clean:
 	@echo "Cleaning..."
