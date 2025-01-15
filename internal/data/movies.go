@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/AlessioPani/go-greenlight/internal/validator"
+	"github.com/lib/pq"
 )
 
 // Struct that defines a movie object.
@@ -25,7 +26,17 @@ type MovieModel struct {
 
 // Insert is a method for inserting a new record in the movies table.
 func (m MovieModel) Insert(movie *Movie) error {
-	return nil
+	// SQL query for inserting a movie in the db and returning
+	// the system-generated data.
+	query := `INSERT INTO movies (title, year, runtime, genres)
+			  VALUES ($1, $2, $3, $4)
+			  RETURNING id, created_at, version`
+
+	// Values for the placeholders in the query.
+	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
+
+	// Executes QueryRow in order to get the system-generated data and returns the error, if any.
+	return m.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
 }
 
 // Get is a method for fetching a specific record from the movies table.
