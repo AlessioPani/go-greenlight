@@ -15,7 +15,6 @@ MAX_IDLE_TIME = 15m
 build:
 	@echo "Building application..."
 	@env go build -ldflags="-s -w" -o ${BINARY_NAME} cmd/api/*
-	@echo "...done!"
 
 # run: build and run the application
 run: build
@@ -30,7 +29,6 @@ start: run
 stop:
 	@echo "Stopping..."
 	@-pkill -SIGTERM -f "${BINARY_NAME}"
-	@echo "...done!"
 
 # restart: stop and start the application
 restart: stop start
@@ -48,4 +46,3 @@ clean:
 	@echo "Cleaning..."
 	@go clean
 	@rm ${BINARY_NAME}
-	@echo "...done!"
