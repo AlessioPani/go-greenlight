@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/AlessioPani/go-greenlight/internal/validator"
@@ -41,7 +42,41 @@ func (m MovieModel) Insert(movie *Movie) error {
 
 // Get is a method for fetching a specific record from the movies table.
 func (m MovieModel) Get(id int64) (*Movie, error) {
-	return nil, nil
+	// Sanitize ID.
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	// SQL query for getting a movie in the db by its ID.
+	query := `SELECT id, created_at, title, year, runtime, genres, version
+			  FROM movies
+			  WHERE id = $1`
+
+	// movie struct to be returned back.
+	movie := Movie{}
+
+	// Executes QueryRow in order to get the record.
+	err := m.DB.QueryRow(query, id).Scan(
+		&movie.ID,
+		&movie.CreatedAt,
+		&movie.Title,
+		&movie.Year,
+		&movie.Runtime,
+		pq.Array(&movie.Genres),
+		&movie.Version,
+	)
+
+	// Checks for errors during Scan().
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &movie, nil
 }
 
 // Update is a method for updating a specific record in the movies table.

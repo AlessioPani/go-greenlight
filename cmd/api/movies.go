@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/AlessioPani/go-greenlight/internal/data"
 	"github.com/AlessioPani/go-greenlight/internal/validator"
@@ -69,21 +69,27 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 // showMovieHandler is the handler that shows a movie by its ID.
 // Method: GET
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
+	// Read the id from the request and validates it.
 	id, err := app.readIDParam(r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
 	}
 
-	movie := data.Movie{
-		ID:        id,
-		CreatedAt: time.Now(),
-		Title:     "Casablanca",
-		Runtime:   102,
-		Genres:    []string{"drama", "romance", "war"},
-		Version:   1,
+	// Gets the movie and checks for errors.
+	movie, err := app.models.Movies.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+			return
+		default:
+			app.serverErrorResponse(w, r, err)
+			return
+		}
 	}
 
+	// Writes back the movie into an enveloped JSON.
 	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
