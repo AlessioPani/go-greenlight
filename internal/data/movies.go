@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/AlessioPani/go-greenlight/internal/validator"
@@ -15,6 +16,31 @@ type Movie struct {
 	Runtime   Runtime   `json:"runtime,omitempty"` // Movie runtime (in minutes)
 	Genres    []string  `json:"genres,omitempty"`  // Slices of genres of the movie (drama, comedy, etc..)
 	Version   int32     `json:"version"`           // The version number starts at 1 and will be incremented each time the movie information is updated
+}
+
+// Movie model struct that wraps a db connection pool.
+type MovieModel struct {
+	DB *sql.DB
+}
+
+// Insert is a method for inserting a new record in the movies table.
+func (m MovieModel) Insert(movie *Movie) error {
+	return nil
+}
+
+// Get is a method for fetching a specific record from the movies table.
+func (m MovieModel) Get(id int64) (*Movie, error) {
+	return nil, nil
+}
+
+// Update is a method for updating a specific record in the movies table.
+func (m MovieModel) Update(movie *Movie) error {
+	return nil
+}
+
+// Delete is a method for deleting a specific record from the movies table.
+func (m MovieModel) Delete(id int64) error {
+	return nil
 }
 
 // ValidateMovie is a method that validates input data.
