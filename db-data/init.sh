@@ -3,7 +3,6 @@
 set -e
 
 # Database setup
-echo "Opening new database as superuser"
 echo "Adding extension and creating a normal operational user"
 psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "greenlight" <<-EOSQL
 	CREATE EXTENSION IF NOT EXISTS citext;

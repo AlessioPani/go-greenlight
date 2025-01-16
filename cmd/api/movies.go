@@ -98,7 +98,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 }
 
 // updateMovieHandler is the handler that updates a movie.
-// Method: PUT
+// Method: PATCH
 func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the movie ID from the URL.
 	id, err := app.readIDParam(r)
@@ -121,11 +121,14 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Declare an input struct to hold the expected data from the client.
+	// Pointers are for a partial update of a record.
+	// If a field is not in the request body, its zero-value is nil and can
+	// be checked.
 	var input struct {
-		Title   string       `json:"title"`
-		Year    int32        `json:"year"`
-		Runtime data.Runtime `json:"runtime"`
-		Genres  []string     `json:"genres"`
+		Title   *string       `json:"title"`
+		Year    *int32        `json:"year"`
+		Runtime *data.Runtime `json:"runtime"`
+		Genres  []string      `json:"genres"`
 	}
 
 	// Read the JSON request body data into the input struct.
@@ -137,10 +140,18 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 
 	// Copy the values from the request body to the appropriate fields of the movie
 	// record.
-	movie.Title = input.Title
-	movie.Year = input.Year
-	movie.Runtime = input.Runtime
-	movie.Genres = input.Genres
+	if input.Title != nil {
+		movie.Title = *input.Title
+	}
+	if input.Year != nil {
+		movie.Year = *input.Year
+	}
+	if input.Runtime != nil {
+		movie.Runtime = *input.Runtime
+	}
+	if input.Genres != nil {
+		movie.Genres = input.Genres
+	}
 
 	// Validate the updated movie record, sending the client a 422 Unprocessable Entity
 	// response if any checks fail.
