@@ -5,9 +5,15 @@ import (
 	"errors"
 )
 
-// ErrRecordNotFound is a custom error returned if the MovieModel.Get() method
-// has as input an Id of a movie that doesn't exist in our database.
-var ErrRecordNotFound = errors.New("record not found")
+var (
+	// ErrRecordNotFound is a custom error returned if the MovieModel.Get() method
+	// has as input an Id of a movie that doesn't exist in our database.
+	ErrRecordNotFound = errors.New("record not found")
+
+	// ErrEditConflict is a custom error returned if a data race condition
+	// occurred while editing a record.
+	ErrEditConflict = errors.New("edit confict")
+)
 
 // Models is a struct which wraps our models.
 type Models struct {

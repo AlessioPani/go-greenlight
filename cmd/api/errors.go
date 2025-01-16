@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// The logError() method is a generic helper for logging an error message along
+// logError is a generic helper for logging an error message along
 // with the current request method and URL as attributes in the log entry.
 func (app *application) logError(r *http.Request, err error) {
 	method := r.Method
@@ -14,7 +14,7 @@ func (app *application) logError(r *http.Request, err error) {
 	app.logger.Error(err.Error(), "method", method, "uri", uri)
 }
 
-// The errorResponse() method is a generic helper for sending JSON-formatted error
+// errorResponse is a generic helper for sending JSON-formatted error
 // messages to the client with a given status code. Note that we're using the any
 // type for the message parameter, rather than just a string type, as this gives us
 // more flexibility over the values that we can include in the response.
@@ -28,14 +28,14 @@ func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, st
 	}
 }
 
-// The badRequestResponse() method send the client a bad request error.
+// badRequestResponse sends a bad request error to the client.
 func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.errorResponse(w, r, http.StatusBadRequest, err.Error())
 }
 
-// The serverErrorResponse() method will be used when our application encounters an
+// serverErrorResponse will be used when our application encounters an
 // unexpected problem at runtime. It logs the detailed error message, then uses the
-// errorResponse() helper to send a 500 Internal Server Error status code and JSON
+// errorResponse helper to send a 500 Internal Server Error status code and JSON
 // response (containing a generic error message) to the client.
 func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.logError(r, err)
@@ -44,21 +44,26 @@ func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Reque
 	app.errorResponse(w, r, http.StatusInternalServerError, message)
 }
 
-// failedValidationResponse() is a method used to send an StatusUnprocessableEntity error.
+// failedValidationResponse sends an StatusUnprocessableEntity error to the client.
 func (app *application) failedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
 	app.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
 }
 
-// The notFoundResponse() method will be used to send a 404 Not Found status code and
-// JSON response to the client.
+// notFoundResponse sends a 404 Not Found status code and JSON response to the client.
 func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request) {
 	message := "the requested resource could not be found"
 	app.errorResponse(w, r, http.StatusNotFound, message)
 }
 
-// The methodNotAllowedResponse() method will be used to send a 405 Method Not Allowed
-// status code and JSON response to the client.
+// methodNotAllowedResponse sends a 405 Method Not Allowed status code and
+// JSON response to the client.
 func (app *application) methodNotAllowedResponse(w http.ResponseWriter, r *http.Request) {
 	message := fmt.Sprintf("the %s method is not supported for this resource", r.Method)
 	app.errorResponse(w, r, http.StatusMethodNotAllowed, message)
+}
+
+// editConflictResponse sends a data race condition error message to the client.
+func (app *application) editConflictResponse(w http.ResponseWriter, r *http.Request) {
+	message := "unable to update the record due to an edit conflict, please try again"
+	app.errorResponse(w, r, http.StatusConflict, message)
 }
