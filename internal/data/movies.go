@@ -81,7 +81,17 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 
 // Update is a method for updating a specific record in the movies table.
 func (m MovieModel) Update(movie *Movie) error {
-	return nil
+	// SQL query for completely update a movie.
+	query := `UPDATE movies
+			  SET title = $1, year = $2, runtime = $3, genres = $4, version = version + 1
+			  WHERE id = $5
+			  RETURNING version`
+
+	// Values for the placeholders in the query.
+	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres), movie.ID}
+
+	// Executes QueryRow in order to get the system-generated data and returns the error, if any.
+	return m.DB.QueryRow(query, args...).Scan(&movie.Version)
 }
 
 // Delete is a method for deleting a specific record from the movies table.
