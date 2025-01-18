@@ -223,3 +223,33 @@ func (app *application) deleteMovieHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 }
+
+// listMovieHandler is the handler that displays all the movies. Compatible with queries.
+// Method: GET
+func (app *application) listMovieHandler(w http.ResponseWriter, r *http.Request) {
+	// input struct to hold the expected values from the request query string.
+	var input struct {
+		Title    string
+		Genres   []string
+		Page     int
+		Pagesize int
+		Sort     string
+	}
+
+	v := validator.New()
+
+	qs := r.URL.Query()
+
+	input.Title = app.readString(qs, "title", "")
+	input.Genres = app.readCSV(qs, "genres", []string{})
+	input.Page = app.readInt(qs, "page", 1, v)
+	input.Pagesize = app.readInt(qs, "page_size", 20, v)
+	input.Sort = app.readString(qs, "sort", "id")
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", input)
+}

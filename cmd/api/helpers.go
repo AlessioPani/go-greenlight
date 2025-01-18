@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
+	"github.com/AlessioPani/go-greenlight/internal/validator"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -134,4 +136,52 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 	}
 
 	return id, nil
+}
+
+// readString returns a string value from the query string, or the default value if no match
+// has been provided.
+func (app *application) readString(qs url.Values, key string, defaultValue string) string {
+	// Gets a string value from the query.
+	s := qs.Get(key)
+
+	// If no key exists, returns the default value.
+	if s == "" {
+		return defaultValue
+	}
+
+	return s
+}
+
+// readCSVr reads a string value from the query string and then splits it into a slice on
+// the comma character. If no matching key could be found, it returns the provided default value.
+func (app *application) readCSV(qs url.Values, key string, defaultValue []string) []string {
+	// Gets a string value from the query.
+	csv := qs.Get(key)
+
+	// If no key exists, returns the default value.
+	if csv == "" {
+		return defaultValue
+	}
+
+	return strings.Split(csv, ",")
+}
+
+func (app *application) readInt(qs url.Values, key string, defaultValue int, v *validator.Validator) int {
+	// Gets a string value from the query.
+	s := qs.Get(key)
+
+	// If no key exists, returns the default value.
+	if s == "" {
+		return defaultValue
+	}
+
+	// Checks for errors during the str -> int conversation. If so, use the default value.
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		v.AddError(key, "must be an integer value")
+		return defaultValue
+	}
+
+	return i
+
 }
