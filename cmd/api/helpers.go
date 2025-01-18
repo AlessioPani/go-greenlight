@@ -152,7 +152,7 @@ func (app *application) readString(qs url.Values, key string, defaultValue strin
 	return s
 }
 
-// readCSVr reads a string value from the query string and then splits it into a slice on
+// readCSV reads a string value from the query string and then splits it into a slice on
 // the comma character. If no matching key could be found, it returns the provided default value.
 func (app *application) readCSV(qs url.Values, key string, defaultValue []string) []string {
 	// Gets a string value from the query.
@@ -166,6 +166,9 @@ func (app *application) readCSV(qs url.Values, key string, defaultValue []string
 	return strings.Split(csv, ",")
 }
 
+// readInt reads a string value from the query string and then converts it into an int.
+// If no matching key could be found or an error occurs when converting, it returns
+// the provided default value.
 func (app *application) readInt(qs url.Values, key string, defaultValue int, v *validator.Validator) int {
 	// Gets a string value from the query.
 	s := qs.Get(key)
