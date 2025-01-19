@@ -88,6 +88,51 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 	return &movie, nil
 }
 
+// GetAll is a method that retrieve all movies from the DB.
+func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, error) {
+	// SQL query to retreive all movie records.
+	query := `SELECT id, created_at, title, year, runtime, genres, version
+			  FROM movies
+			  ORDER BY id`
+
+	// Creates a context with a 3 seconds timeout.
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Executes the query.
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Scan rows to fill the result struct.
+	movies := []*Movie{}
+	for rows.Next() {
+		var movie Movie
+
+		err := rows.Scan(
+			&movie.ID,
+			&movie.CreatedAt,
+			&movie.Title,
+			&movie.Year,
+			&movie.Runtime,
+			pq.Array(&movie.Genres),
+			&movie.Version)
+		if err != nil {
+			return nil, err
+		}
+		movies = append(movies, &movie)
+	}
+
+	// Checks again for errors.
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return movies, nil
+}
+
 // Update is a method for updating a specific record in the movies table.
 //
 // This method has an optimistic locking functionality to prevent data race
