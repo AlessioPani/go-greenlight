@@ -91,9 +91,10 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 // GetAll is a method that retrieve all movies from the DB.
 func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, error) {
 	// SQL query to retreive all movie records.
+	// Uses built-in functionality of Postgres to achieve full-text search with lexemes.
 	query := `SELECT id, created_at, title, year, runtime, genres, version
 			  FROM movies
-			  WHERE (LOWER(title) = LOWER($1) OR $1 = '')
+			  WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
 			  AND (genres @> $2 OR $2 ='{}')
 			  ORDER BY id`
 
