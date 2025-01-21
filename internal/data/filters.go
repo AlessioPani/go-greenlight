@@ -34,6 +34,16 @@ func (f Filters) sortDirection() string {
 	return "ASC"
 }
 
+// limit is a method that returns the pagesize of a filter.
+func (f Filters) limit() int {
+	return f.PageSize
+}
+
+// offset is a method that returns the page of a filter.
+func (f Filters) offset() int {
+	return (f.Page - 1) * f.PageSize
+}
+
 // ValidateFilters is an helper method to validate a Filters struct.
 func ValidateFilters(v *validator.Validator, f Filters) {
 	v.Check(f.Page > 0, "page", "must be greater than zero")
