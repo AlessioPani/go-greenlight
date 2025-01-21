@@ -253,14 +253,14 @@ func (app *application) listMovieHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// If validation is ok, retrieve movies.
-	movies, err := app.models.Movies.GetAll(input.Title, input.Genres, input.Filter)
+	movies, metadata, err := app.models.Movies.GetAll(input.Title, input.Genres, input.Filter)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	// Return a 200 OK status code along with a success message.
-	err = app.writeJSON(w, http.StatusOK, envelope{"movies": movies}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"metadata": metadata, "movies": movies}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

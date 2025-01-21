@@ -90,10 +90,10 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 }
 
 // GetAll is a method that retrieve all movies from the DB.
-func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, error) {
+func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, Metadata, error) {
 	// SQL query to retreive all movie records.
 	// Uses built-in functionality of Postgres to achieve full-text search with lexemes.
-	query := fmt.Sprintf(`SELECT id, created_at, title, year, runtime, genres, version
+	query := fmt.Sprintf(`SELECT count(*) OVER(), id, created_at, title, year, runtime, genres, version
 			 	          FROM movies
 			  			  WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
 			  			  AND (genres @> $2 OR $2 ='{}')
@@ -107,16 +107,18 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 	// Executes the query.
 	rows, err := m.DB.QueryContext(ctx, query, title, pq.Array(genres), filters.limit(), filters.offset())
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 	defer rows.Close()
 
-	// Scan rows to fill the result struct.
+	// Scan rows to fill the result and metadata struct.
+	totalRecords := 0
 	movies := []*Movie{}
 	for rows.Next() {
 		var movie Movie
 
 		err := rows.Scan(
+			&totalRecords,
 			&movie.ID,
 			&movie.CreatedAt,
 			&movie.Title,
@@ -125,17 +127,19 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 			pq.Array(&movie.Genres),
 			&movie.Version)
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 		movies = append(movies, &movie)
 	}
 
 	// Checks again for errors.
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
-	return movies, nil
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+	return movies, metadata, nil
 }
 
 // Update is a method for updating a specific record in the movies table.
