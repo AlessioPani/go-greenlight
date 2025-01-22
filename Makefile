@@ -8,6 +8,10 @@ DSN = "postgres://greenlight:secret_password@localhost/greenlight?sslmode=disabl
 MAX_OPEN_CONNS = 25
 MAX_IDLE_CONNS = 25
 MAX_IDLE_TIME = 15m
+## RATE LIMITER CONFIGURATION VARIABLES
+LIMITER_RPS = 2
+LIMITER_BURST = 4
+LIMITER_ENABLED = true
 
 ## COMMANDS LIST
 # build: build the application with extra flags to get the smallest executable
@@ -19,7 +23,7 @@ build:
 # run: build and run the application
 run: build
 	@echo "Running application..."
-	@env ./${BINARY_NAME} -port=${PORT} -env=${ENVIRONMENT} -dsn=${DSN} -db-max-open-conns=${MAX_OPEN_CONNS} -db-max-idle-conns=${MAX_IDLE_CONNS} -db-max-idle-time=${MAX_IDLE_TIME}
+	@env ./${BINARY_NAME} -port=${PORT} -env=${ENVIRONMENT} -dsn=${DSN} -db-max-open-conns=${MAX_OPEN_CONNS} -db-max-idle-conns=${MAX_IDLE_CONNS} -db-max-idle-time=${MAX_IDLE_TIME} -limiter-rps=${LIMITER_RPS} -limiter-burst=${LIMITER_BURST} -limiter-enabled=${LIMITER_ENABLED}
 
 # start: alias to run
 start: run
