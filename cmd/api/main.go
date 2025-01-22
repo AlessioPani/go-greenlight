@@ -111,7 +111,7 @@ func openDB(cfg config) (*sql.DB, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Check the connection pool connection. If it doesn't, within the deadline (5 sec)
+	// Check the connection pool connection. If it doesn't within the deadline (5 sec)
 	// returns an error.
 	err = db.PingContext(ctx)
 	if err != nil {
