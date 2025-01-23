@@ -4,9 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"time"
 
@@ -85,24 +83,12 @@ func main() {
 		models: data.NewModels(db),
 	}
 
-	// Get the configured mux with httprouter.
-	mux := app.routes()
-
-	// Start the server and check for errors.
-	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      mux,
-		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+	// Gets the configured mux with httprouter and runs it.
+	err = app.serve()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
-
-	logger.Info("starting server", "addr", server.Addr, "env", cfg.env)
-
-	err = server.ListenAndServe()
-	logger.Error(err.Error())
-	os.Exit(1)
 }
 
 // The openDB() function returns a sql.DB connection pool.
