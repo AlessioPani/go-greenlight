@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/AlessioPani/go-greenlight/internal/validator"
@@ -40,10 +41,10 @@ func (m UserModel) Insert(user *User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, args).Scan(&user.ID, &user.CreatedDate, &user.Version)
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedDate, &user.Version)
 	if err != nil {
 		switch {
-		case err.Error() == `email pq: duplicate key value violates unique constraint "users_email_key"`:
+		case strings.Contains(err.Error(), "users_email_key"):
 			return ErrDuplicateEmail
 		default:
 			return err
@@ -93,7 +94,7 @@ m			  SET name = $1, email = $2, password_hash = $3, activated = $4, version = v
 	err := m.DB.QueryRowContext(ctx, query, args).Scan(&user.Version)
 	if err != nil {
 		switch {
-		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
+		case strings.Contains(err.Error(), "users_email_key"):
 			return ErrDuplicateEmail
 		default:
 			return err
