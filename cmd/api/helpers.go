@@ -188,3 +188,19 @@ func (app *application) readInt(qs url.Values, key string, defaultValue int, v *
 	return i
 
 }
+
+// background is an helper method that runs a function in background
+// in a separate goroutine and recover from panic.
+func (app *application) background(fn func()) {
+	go func() {
+		// Recover from any panic.
+		defer func() {
+			if err := recover(); err != nil {
+				app.logger.Error("%v", err)
+			}
+		}()
+
+		// Executes the function.
+		fn()
+	}()
+}
