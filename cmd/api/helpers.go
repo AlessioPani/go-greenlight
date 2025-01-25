@@ -190,7 +190,7 @@ func (app *application) readInt(qs url.Values, key string, defaultValue int, v *
 }
 
 // background is an helper method that runs a function in background
-// in a separate goroutine and recover from panic.
+// in a separate goroutine and recovers from panic.
 func (app *application) background(fn func()) {
 	// Increment the WaitGroup counter.
 	app.wg.Add(1)
