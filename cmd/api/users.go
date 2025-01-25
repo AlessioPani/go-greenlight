@@ -50,7 +50,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Insert the user data into the database.
-	err = app.models.User.Insert(user)
+	err = app.models.Users.Insert(user)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrDuplicateEmail):
