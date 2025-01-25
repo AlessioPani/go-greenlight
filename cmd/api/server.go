@@ -46,7 +46,17 @@ func (app *application) serve() error {
 		// error (which may happen because the shutdown didn't complete before
 		// the 30-second context deadline is hit).
 		// We send back this return value to the shutdownError channel.
-		shutdownError <- server.Shutdown(ctx)
+		err := server.Shutdown(ctx)
+		if err != nil {
+			shutdownError <- err
+		}
+
+		// Wait for all the background goroutines to finish their task before
+		// shutting down the server.
+		app.logger.Info("completing background tasks", "addr", server.Addr)
+
+		app.wg.Wait()
+		shutdownError <- nil
 	}()
 
 	app.logger.Info("starting server", "addr", server.Addr, "env", app.config.env)
