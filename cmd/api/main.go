@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/AlessioPani/go-greenlight/internal/data"
+	"github.com/AlessioPani/go-greenlight/internal/mailer"
 	_ "github.com/lib/pq"
 )
 
@@ -39,6 +40,13 @@ type config struct {
 		// enabled is a flag that enable (true) or disable (false) the rate limiter.
 		enabled bool
 	}
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
 }
 
 // application is a struct that contains the dependencies for the application.
@@ -46,6 +54,7 @@ type application struct {
 	config config
 	logger *slog.Logger
 	models data.Models
+	mailer mailer.Mailer
 }
 
 func main() {
@@ -62,6 +71,11 @@ func main() {
 	flag.Float64Var(&cfg.limiter.rps, "limiter-rps", 2, "Rate limiter maximum requests per second")
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
+	flag.StringVar(&cfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
+	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", "07bfea611528f4", "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", "91a88a62a256a5", "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.net>", "SMTP sender")
 	flag.Parse()
 
 	// Initialize a new structured logger.
@@ -81,6 +95,7 @@ func main() {
 		config: cfg,
 		logger: logger,
 		models: data.NewModels(db),
+		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 
 	// Gets the configured mux with httprouter and runs it.
