@@ -1,12 +1,16 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/AlessioPani/go-greenlight/internal/data"
+	"github.com/AlessioPani/go-greenlight/internal/validator"
 	"golang.org/x/time/rate"
 )
 
@@ -87,6 +91,59 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 			mu.Unlock()
 		}
 
+		next.ServeHTTP(w, r)
+	})
+}
+
+// authenticate is the middleware that handle authentication by setting the request context.
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// This indicates to any caches that the response may vary based on the value of the
+		// Authorization header in the request.
+		w.Header().Add("Vary", "Authorization")
+
+		// Check for the authorization header. If it is empty put in the context the anonymous user.
+		authorizationHeader := r.Header.Get("Authorization")
+		if authorizationHeader == "" {
+			r = app.contextSetUser(r, data.AnonymouseUser)
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Check for the authorization header to be in the Bearer <token> format.
+		// If not, send the appropriate error to the user.
+		headerParts := strings.Split(authorizationHeader, " ")
+		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		// Gets the actual token and validates it.
+		token := headerParts[1]
+
+		v := validator.New()
+
+		if data.ValidateTokenPlaintext(v, token); !v.Valid() {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		// Retrieve the user from the DB by its auth token.
+		user, err := app.models.Users.GetForToken(data.ScopeAuthentication, token)
+		if err != nil {
+			switch {
+			case errors.Is(err, data.ErrRecordNotFound):
+				app.invalidAuthenticationTokenResponse(w, r)
+			default:
+				app.serverErrorResponse(w, r, err)
+			}
+			return
+		}
+
+		// Puts the user in the context of the new request.
+		r = app.contextSetUser(r, user)
+
+		// Call the next handler in the chain.
 		next.ServeHTTP(w, r)
 	})
 }

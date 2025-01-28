@@ -15,6 +15,9 @@ import (
 // Custom error for a user with an already used email.
 var ErrDuplicateEmail = errors.New("duplicate email")
 
+// Anonymous user.
+var AnonymouseUser = &User{}
+
 // User is a struct that represents an individual user.
 type User struct {
 	ID        int64     `json:"id"`
@@ -23,12 +26,17 @@ type User struct {
 	Email     string    `json:"email"`
 	Password  password  `json:"-"`
 	Activated bool      `json:"activated"`
-	Version   int       `json:"version"`
+	Version   int       `json:"-"`
 }
 
 // User model struct that wraps a db connection pool.
 type UserModel struct {
 	DB *sql.DB
+}
+
+// Check if a user instance is an anonymous user.
+func (u *User) IsAnonymous() bool {
+	return u == AnonymouseUser
 }
 
 // Insert is a method used to add a new user to the User table.
