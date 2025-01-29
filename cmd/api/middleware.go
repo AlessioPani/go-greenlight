@@ -148,12 +148,11 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 	})
 }
 
-// requireActivatedUser is a middleware that verifies if a user is activated
+// requireAuthenticatedUser is a middleware that verifies if a user is authenticated
 // and can get the requested resource.
 // Accepts and returns a http.HandlerFunc to encapsulate the handlers in routes.go
 // without any further conversion.
-func (app *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
-
+func (app *application) requireAuthenticatedUser(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get the user from the request context.
 		user := app.contextGetUser(r)
@@ -163,6 +162,19 @@ func (app *application) requireActivatedUser(next http.HandlerFunc) http.Handler
 			return
 		}
 
+		next.ServeHTTP(w, r)
+	})
+}
+
+// requireActivatedUser is a middleware that verifies if a user is activated
+// and can get the requested resource.
+// Accepts and returns a http.HandlerFunc to encapsulate the handlers in routes.go
+// without any further conversion.
+func (app *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
+	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Get the user from the request context.
+		user := app.contextGetUser(r)
+
 		if !user.Activated {
 			app.inactiveAccountResponse(w, r)
 			return
@@ -170,4 +182,6 @@ func (app *application) requireActivatedUser(next http.HandlerFunc) http.Handler
 
 		next.ServeHTTP(w, r)
 	})
+
+	return app.requireAuthenticatedUser(fn)
 }
