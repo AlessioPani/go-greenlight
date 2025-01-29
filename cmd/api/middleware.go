@@ -95,7 +95,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 	})
 }
 
-// authenticate is the middleware that handle authentication by setting the request context.
+// authenticate is a middleware that handle authentication by setting the request context.
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// This indicates to any caches that the response may vary based on the value of the
@@ -144,6 +144,30 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		r = app.contextSetUser(r, user)
 
 		// Call the next handler in the chain.
+		next.ServeHTTP(w, r)
+	})
+}
+
+// requireActivatedUser is a middleware that verifies if a user is activated
+// and can get the requested resource.
+// Accepts and returns a http.HandlerFunc to encapsulate the handlers in routes.go
+// without any further conversion.
+func (app *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Get the user from the request context.
+		user := app.contextGetUser(r)
+
+		if user.IsAnonymous() {
+			app.authenticationRequiredResponse(w, r)
+			return
+		}
+
+		if !user.Activated {
+			app.inactiveAccountResponse(w, r)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
