@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"slices"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 // Permissions is a slice of string used to contain the permission for
@@ -24,7 +26,7 @@ type PermissionModel struct {
 
 // GetAllForUser is a method that retrieves all the permission for a specific
 // user from the DB.
-func (p PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
+func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 	// SQL query to retreive all movie records.
 	query := `SELECT permissions.code
 			  FROM permissions
@@ -37,7 +39,7 @@ func (p PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 	defer cancel()
 
 	// Executes the query.
-	rows, err := p.DB.QueryContext(ctx, query, userID)
+	rows, err := m.DB.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,4 +64,21 @@ func (p PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 	}
 
 	return permissions, nil
+}
+
+// AddForUser is a method used to add permissions to a user.
+func (m PermissionModel) AddForUser(userID int64, codes ...string) error {
+	// SQL query to retreive all movie records.
+	query := `INSERT INTO users_permissions
+			  SELECT $1, permissions.id FROM permissions
+			  WHERE permissions.code = ANY($2)`
+
+	// Creates a context with a 3 seconds timeout.
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Executes the query.
+	_, err := m.DB.ExecContext(ctx, query, userID, pq.Array(codes))
+
+	return err
 }
