@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"database/sql"
+	"expvar"
 	"flag"
 	"log/slog"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 
@@ -91,6 +93,25 @@ func main() {
 	}
 	defer db.Close()
 	logger.Info("database connection pool established successfully")
+
+	// Custom metrics definition
+	// Version
+	expvar.NewString("version").Set(version)
+
+	// Number of goroutines
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
+
+	// DB stats
+	expvar.Publish("database", expvar.Func(func() any {
+		return db.Stats()
+	}))
+
+	// Timestamp
+	expvar.Publish("timestamp", expvar.Func(func() any {
+		return time.Now().Unix()
+	}))
 
 	// Initialize application config with all the dependencies.
 	app := &application{
