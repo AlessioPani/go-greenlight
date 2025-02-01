@@ -27,7 +27,7 @@ The project serves as training for building a REST API app with Go, following (o
 
 - [bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt) package for hashing alghoritms
 
-- Makefile
+- Make
 
 - Docker
 
