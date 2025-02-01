@@ -1,3 +1,6 @@
+# ==================================================================================== #
+# CONFIGURATION
+# ==================================================================================== #	
 ## => Edit Makefile to update configuration variables as needed
 # APP CONFIGURATION VARIABLES
 BINARY_NAME = greenlight
@@ -44,12 +47,12 @@ help:
 # -s -w : disable generation of the Go symbol table and DWARF debugging information
 build:
 	@echo "Building application..."
-	@env go build -ldflags="-s -w" -o ${BINARY_NAME} cmd/api/*
+	@env go build -ldflags="-s -w" -o ./bin/api/${BINARY_NAME} cmd/api/*
 
 # run: build and run the application
 run: build
 	@echo "Running application..."
-	@env ./${BINARY_NAME} -port=${PORT} -env=${ENVIRONMENT} -dsn=${DSN} -db-max-open-conns=${MAX_OPEN_CONNS} -db-max-idle-conns=${MAX_IDLE_CONNS} -db-max-idle-time=${MAX_IDLE_TIME} -limiter-rps=${LIMITER_RPS} -limiter-burst=${LIMITER_BURST} -limiter-enabled=${LIMITER_ENABLED} -smtp-host=${SMTP_HOST} -smtp-port=${SMTP_PORT} -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD} -smtp-sender=${SMTP_SENDER}
+	@env ./bin/api/${BINARY_NAME} -port=${PORT} -env=${ENVIRONMENT} -dsn=${DSN} -db-max-open-conns=${MAX_OPEN_CONNS} -db-max-idle-conns=${MAX_IDLE_CONNS} -db-max-idle-time=${MAX_IDLE_TIME} -limiter-rps=${LIMITER_RPS} -limiter-burst=${LIMITER_BURST} -limiter-enabled=${LIMITER_ENABLED} -smtp-host=${SMTP_HOST} -smtp-port=${SMTP_PORT} -smtp-username=${SMTP_USERNAME} -smtp-password=${SMTP_PASSWORD} -smtp-sender=${SMTP_SENDER}
 
 ## start: alias to run
 start: run

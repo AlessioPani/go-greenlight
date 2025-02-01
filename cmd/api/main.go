@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"expvar"
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"runtime"
@@ -17,7 +18,6 @@ import (
 )
 
 // version is the application version number.
-// TODO: to be generated automatically at build time.
 const version = "1.0.0"
 
 // config is a struct that contains the configuration for the application.
@@ -65,7 +65,7 @@ func main() {
 	// Instance of the config struct.
 	var cfg config
 
-	// Fill the config struct by parsing command line parameters.
+	// Fill the config struct and display version flag by parsing command line parameters.
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 	flag.StringVar(&cfg.db.dsn, "dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
@@ -80,7 +80,13 @@ func main() {
 	flag.StringVar(&cfg.smtp.username, "smtp-username", "", "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.net>", "SMTP sender")
+	displayVersion := flag.Bool("version", false, "Display version and exit")
 	flag.Parse()
+
+	if *displayVersion {
+		fmt.Printf("Version:\t%s\n", version)
+		os.Exit(0)
+	}
 
 	// Initialize a new structured logger.
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
