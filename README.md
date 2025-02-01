@@ -9,11 +9,33 @@ The project serves as training for building a REST API app with Go, following (o
 
 - TBD
 
-
+  
 
 ## Dependencies
 
-- TBD
+- Julien Schmidt's [httprouter](https://github.com/julienschmidt/httprouter)
+
+- Postgres driver from [pq](https://github.com/lib/pq)
+
+- [Go-mail](https://github.com/go-mail/mail) to send emails
+
+- Justinas's [Alice](https://github.com/justinas/alice) for a more readable middleware chaining
+
+- [Golang-migrate](https://github.com/golang-migrate/migrate) to manage database migrations
+
+- [Rate](golang.org/x/time/rate) package to implement rate limiters
+
+- [bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt) package for hashing alghoritms
+
+- Makefile
+
+- Docker
+
+  
+
+## Todo
+
+- Tests
 
   
 
@@ -21,6 +43,8 @@ The project serves as training for building a REST API app with Go, following (o
 ## Usage
 
 - TBD  
+
+  
 
 
 ## API structure
