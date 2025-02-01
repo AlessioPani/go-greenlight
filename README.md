@@ -18,6 +18,11 @@ The project serves as training for building a REST API app with Go, following (o
   
 
 
+## Usage
+
+- TBD  
+
+
 ## API structure
 
 | Method | URL pattern               | Action                                          |

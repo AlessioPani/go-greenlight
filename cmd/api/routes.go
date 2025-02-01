@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/alice"
 )
 
 // routes configure the application mux and return it back to the main function.
@@ -40,5 +41,8 @@ func (app *application) routes() http.Handler {
 	// Metrics
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 
-	return app.metrics(app.recoverPanic(app.rateLimit(app.authenticate(router))))
+	// Middleware chain
+	chain := alice.New(app.metrics, app.recoverPanic, app.rateLimit, app.authenticate)
+
+	return chain.Then(router)
 }
