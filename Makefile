@@ -29,11 +29,17 @@ SMTP_HOST = localhost
 SMTP_PORT =	1025
 
 ## COMMANDS LIST
+# ==================================================================================== #
+# HELPERS
+# ==================================================================================== #	
 ## help: print this help message
 help:
 	@echo 'Usage:'
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' | sed -e 's/^/ /'
 
+# ==================================================================================== #
+# DEVELOPMENT
+# ==================================================================================== #	
 # build: build the application with extra flags to get the smallest executable
 # -s -w : disable generation of the Go symbol table and DWARF debugging information
 build:
@@ -57,14 +63,6 @@ stop:
 ## restart: stop and start the application
 restart: stop start
 
-## test: executes tests in verbose mode
-test:
-	@env go test -v ./...
-
-## coverage: executes tests and generate coverage profile
-coverage:
-	@env go test -coverprofile=./coverage.out  ./... && go tool cover -html=./coverage.out
-
 ## migrate-up: executes db migrations
 migrate-up:
 	@env migrate -path=./migrations -database=${DSN} up
@@ -83,3 +81,36 @@ clean:
 	@echo "Cleaning..."
 	@go clean
 	@rm ${BINARY_NAME}
+
+# ==================================================================================== #
+# QUALITY CONTROL
+# ==================================================================================== #	
+## test: executes tests in verbose mode
+test:
+	@env go test -race -vet=off -v ./...
+
+## coverage: executes tests and generate coverage profile
+coverage:
+	@env go test -coverprofile=./coverage.out  ./... && go tool cover -html=./coverage.out
+
+## tidy: format all .go files and tidy module dependencies
+tidy:
+	@echo 'Formatting .go files...'
+	@env go fmt ./...
+	@echo 'Tidying module dependencies...'
+	@env go mod tidy
+	@echo 'Verifying and vendoring module dependencies...'
+	go mod verify
+	go mod vendor
+
+## audit: run quality control checks
+audit:
+	@echo 'Checking module dependencies'
+	@env go mod tidy -diff
+	@env go mod verify
+	@echo 'Vetting code...'
+	@env go vet ./...
+	@env staticcheck ./...
+	@echo 'Running tests...'
+	@env go test -race -vet=off -v ./...
+
