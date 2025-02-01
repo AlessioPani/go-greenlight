@@ -17,6 +17,9 @@ const ScopeActivation = "activation"
 // ScopeAuthentication is the scope related to the authentication of a user.
 const ScopeAuthentication = "authentication"
 
+// ScopePasswordReset is the scope related to the password reset of a user.
+const ScopePasswordReset = "password-reset"
+
 // Token is a struct used to hold the data for an individual token. This includes the
 // plaintext and hashed versions of the token, associated user ID, expiry time and
 // scope.
