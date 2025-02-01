@@ -29,14 +29,15 @@ The project serves as training for building a REST API app with Go, following (o
 | PATCH  | /v1/movies/:id            | Update the details of a specific movie          |
 | DELETE | /v1/movies/:id            | Delete a specific movie                         |
 | POST   | /v1/users                 | Register a new user                             |
-| PUT    | /v1/activated             | Activate a specific user                        |
+| PUT    | /v1/users/activated       | Activate a specific user                        |
 | PUT    | /v1/users/password        | Update the password for a specific user         |
 | POST   | /v1/tokens/authentication | Generate a new authentication token             |
 | POST   | /v1/tokens/password-reset | Generate a new password-reset token             |
+| POST   | /v1/tokens/activation     | Generate a new activation token                 |
 | GET    | /debug/vars               | Display application metrics                     |
 
 
 
 ## Acknowledgements
 
-- This project is strongly based on the Let's Go Further 1.23 book's project, made by Alex Edwards, one of the most prominent Go developers in the community. [Here](https://lets-go-further.alexedwards.net) you can buy it!
+- This project is based on the Let's Go Further 1.23 book's project, made by Alex Edwards, one of the most prominent Go developers in the community. [Here](https://lets-go-further.alexedwards.net) you can buy it!
