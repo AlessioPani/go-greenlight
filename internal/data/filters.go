@@ -65,7 +65,7 @@ type Metadata struct {
 // calculateMetadata is a function that calculates the pagination metadata,
 // given the total number of records, current page and the page size.
 func calculateMetadata(totalRecords int, page int, pageSize int) Metadata {
-	if totalRecords == 0 {
+	if totalRecords == 0 || page == 0 || pageSize == 0 {
 		return Metadata{}
 	}
 
