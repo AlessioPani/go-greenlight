@@ -22,9 +22,10 @@ const version = "1.0.0"
 
 // config is a struct that contains the configuration for the application.
 type config struct {
-	port int
-	env  string
-	db   struct {
+	port          int
+	env           string
+	enableMetrics bool
+	db            struct {
 		dsn string
 		// maxOpenConns limits the number of open connections (active and idle) imposed
 		// by both database and infrastructure (Postgres has an hard limit of 100 connections).
@@ -80,6 +81,7 @@ func main() {
 	flag.StringVar(&cfg.smtp.username, "smtp-username", "", "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.net>", "SMTP sender")
+	flag.BoolVar(&cfg.enableMetrics, "metrics-enabled", true, "Enable metrics middleware")
 	displayVersion := flag.Bool("version", false, "Display version and exit")
 	flag.Parse()
 

@@ -43,7 +43,12 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 
 	// Middleware chain
-	chain := alice.New(app.metrics, app.recoverPanic, app.rateLimit, app.authenticate)
+	chain := alice.Chain{}
+	if app.config.enableMetrics == true {
+		chain = alice.New(app.metrics, app.recoverPanic, app.rateLimit, app.authenticate)
+	} else {
+		chain = alice.New(app.recoverPanic, app.rateLimit, app.authenticate)
+	}
 
 	return chain.Then(router)
 }

@@ -12,6 +12,7 @@ func newTestApplication() *application {
 
 	app.logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	app.mailer = mailer.New("localhost", 1025, "", "", "sender")
+	app.config.enableMetrics = false
 
 	return &app
 }
