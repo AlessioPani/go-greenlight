@@ -14,6 +14,7 @@ func (app *application) routes() http.Handler {
 	router := httprouter.New()
 	router.RedirectTrailingSlash = true
 	router.RedirectFixedPath = true
+	router.HandleMethodNotAllowed = true
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 

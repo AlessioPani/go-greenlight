@@ -5,6 +5,7 @@ import (
 )
 
 // healthcheckHandler is the handler that shows information about the application.
+// Method: GET
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	// Define data map to be converted in JSON.
 	env := envelope{
