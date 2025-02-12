@@ -11,7 +11,7 @@ var sortSafeList = []string{"id", "title", "year", "runtime", "-id", "-title", "
 // Test method used to test the private function calculateMetadata.
 func TestCalculateMetadata(t *testing.T) {
 	// Tests to be run.
-.	tests := []struct {
+	tests := []struct {
 		name           string
 		totalRecords   int
 		page           int

@@ -83,7 +83,7 @@ migration:
 clean:
 	@echo "Cleaning..."
 	@go clean
-	@rm ${BINARY_NAME}
+	@rm ./bin/api/${BINARY_NAME}
 
 # ==================================================================================== #
 # QUALITY CONTROL
