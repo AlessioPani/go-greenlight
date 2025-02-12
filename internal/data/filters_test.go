@@ -8,8 +8,10 @@ import (
 
 var sortSafeList = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
 
+// Test method used to test the private function calculateMetadata.
 func TestCalculateMetadata(t *testing.T) {
-	tests := []struct {
+	// Tests to be run.
+.	tests := []struct {
 		name           string
 		totalRecords   int
 		page           int
@@ -22,6 +24,7 @@ func TestCalculateMetadata(t *testing.T) {
 		{"pageSize = 0", 10, 2, 0, Metadata{}},
 	}
 
+	// Executes tests.
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := calculateMetadata(test.totalRecords, test.page, test.pageSize)
@@ -32,7 +35,9 @@ func TestCalculateMetadata(t *testing.T) {
 	}
 }
 
+// Test method used to test the ValidateFilters function.
 func TestValidateFilters(t *testing.T) {
+	// Tests to be run.
 	tests := []struct {
 		name           string
 		filter         Filters
@@ -47,6 +52,7 @@ func TestValidateFilters(t *testing.T) {
 		{"filter not supported", Filters{Page: 1, PageSize: 2, Sort: "wrong", SortSafeList: sortSafeList}, "sort", "invalid sort value"},
 	}
 
+	// Executes tests.
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			v := validator.New()
@@ -58,7 +64,9 @@ func TestValidateFilters(t *testing.T) {
 	}
 }
 
+// Test method used to test the sortColumn function.
 func TestSortColumn(t *testing.T) {
+	// Tests to be run.
 	tests := []struct {
 		name           string
 		filter         Filters
@@ -69,13 +77,18 @@ func TestSortColumn(t *testing.T) {
 		{"panic", Filters{Page: 1, PageSize: 2, Sort: "wrong", SortSafeList: sortSafeList}, ""},
 	}
 
+	// Executes tests.
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			// Defer function to verify if the sortColumn function did panic during
+			// the "panic" test execution.
 			defer func() {
 				if err := recover(); test.name == "panic" && err == nil {
 					t.Errorf("the function did not panic")
 				}
 			}()
+
+			// Checks the results.
 			result := test.filter.sortColumn()
 			if result != test.expectedResult {
 				t.Errorf("got %s, expected %s", test.filter.sortColumn(), test.expectedResult)
@@ -84,7 +97,9 @@ func TestSortColumn(t *testing.T) {
 	}
 }
 
+// Test method used to test the sortDirection function.
 func TestSortDirection(t *testing.T) {
+	// Tests to be run.
 	tests := []struct {
 		name           string
 		filter         Filters
@@ -94,6 +109,7 @@ func TestSortDirection(t *testing.T) {
 		{"desc", Filters{Page: 1, PageSize: 2, Sort: "-title", SortSafeList: sortSafeList}, "DESC"},
 	}
 
+	// Executes tests.
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := test.filter.sortDirection()
@@ -104,7 +120,9 @@ func TestSortDirection(t *testing.T) {
 	}
 }
 
+// Test method used to test the limit function.
 func TestLimit(t *testing.T) {
+	// Tests to be run.
 	tests := []struct {
 		name           string
 		filter         Filters
@@ -114,6 +132,7 @@ func TestLimit(t *testing.T) {
 		{"pagesize 3", Filters{Page: 1, PageSize: 3, Sort: "-title", SortSafeList: sortSafeList}, 3},
 	}
 
+	// Executes tests.
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := test.filter.limit()
@@ -124,7 +143,9 @@ func TestLimit(t *testing.T) {
 	}
 }
 
+// Test method used to test the offset function.
 func TestOffset(t *testing.T) {
+	// Tests to be run.
 	tests := []struct {
 		name           string
 		filter         Filters
@@ -134,6 +155,7 @@ func TestOffset(t *testing.T) {
 		{"page 2", Filters{Page: 2, PageSize: 3, Sort: "-title", SortSafeList: sortSafeList}, 3},
 	}
 
+	// Executes tests.
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := test.filter.offset()
