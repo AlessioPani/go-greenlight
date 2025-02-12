@@ -79,10 +79,6 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	// Send email to the new user from a new goroutine that runs in background.
 	app.background(func() {
-		// Synchronize access to shared data.
-		app.mu.Lock()
-		defer app.mu.Unlock()
-
 		// Prepare context data for the email and send it.
 		data := map[string]any{
 			"activationToken": token.Plaintext,

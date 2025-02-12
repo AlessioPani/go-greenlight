@@ -60,7 +60,6 @@ type application struct {
 	models data.Models
 	mailer mailer.Mailer
 	wg     sync.WaitGroup
-	mu     sync.Mutex
 }
 
 func main() {
