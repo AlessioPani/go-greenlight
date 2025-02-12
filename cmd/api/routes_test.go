@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+// Test method used to test the routes function.
 func TestRoutes(t *testing.T) {
 	app := newTestApplication()
 
