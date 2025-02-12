@@ -19,6 +19,12 @@ func (p Permissions) Include(code string) bool {
 	return slices.Contains(p, code)
 }
 
+// Interface for the permission model.
+type PermissionModelInterface interface {
+	GetAllForUser(userID int64) (Permissions, error)
+	AddForUser(userID int64, codes ...string) error
+}
+
 // Permission model struct that wraps a db connection pool.
 type PermissionModel struct {
 	DB *sql.DB

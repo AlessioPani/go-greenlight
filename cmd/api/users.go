@@ -79,6 +79,11 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	// Send email to the new user from a new goroutine that runs in background.
 	app.background(func() {
+		// Synchronize access to shared data.
+		app.mu.Lock()
+		defer app.mu.Unlock()
+
+		// Prepare context data for the email and send it.
 		data := map[string]any{
 			"activationToken": token.Plaintext,
 			"userID":          user.ID,
@@ -166,6 +171,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 }
 
 // Verify the password reset token and set a new password for the user.
+// Method: PUT
 func (app *application) updateUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse and validate the user's new password and password reset token.
 	var input struct {

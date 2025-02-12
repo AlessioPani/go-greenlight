@@ -29,18 +29,26 @@ type User struct {
 	Version   int       `json:"-"`
 }
 
-// User model struct that wraps a db connection pool.
-type UserModel struct {
-	DB *sql.DB
-}
-
 // Check if a user instance is an anonymous user.
 func (u *User) IsAnonymous() bool {
 	return u == AnonymouseUser
 }
 
+// Interface for the user model.
+type UserModelInterface interface {
+	Insert(user *User) error
+	Update(user *User) error
+	GetByEmail(email string) (*User, error)
+	GetForToken(tokenScope string, tokenPlaintext string) (*User, error)
+}
+
+// User model struct that wraps a db connection pool.
+type UserModel struct {
+	DB *sql.DB
+}
+
 // Insert is a method used to add a new user to the User table.
-func (m UserModel) Insert(user *User) error {
+func (m *UserModel) Insert(user *User) error {
 	query := `INSERT INTO users (name, email, password_hash, activated)
 			  VALUES ($1, $2, $3, $4)
 			  RETURNING id, created_at, version`
@@ -89,7 +97,7 @@ func (m *UserModel) GetByEmail(email string) (*User, error) {
 }
 
 // Update is a method used to update a user in the database.
-func (m UserModel) Update(user *User) error {
+func (m *UserModel) Update(user *User) error {
 	query := `UPDATE users
 			  SET name = $1, email = $2, password_hash = $3, activated = $4, version = version + 1
 			  WHERE id = $5 AND version = $6
@@ -114,7 +122,7 @@ func (m UserModel) Update(user *User) error {
 }
 
 // GetForToken is a method used to get a user from a token specified in input.
-func (m UserModel) GetForToken(tokenScope string, tokenPlaintext string) (*User, error) {
+func (m *UserModel) GetForToken(tokenScope string, tokenPlaintext string) (*User, error) {
 	// Get the hashed token.
 	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
 

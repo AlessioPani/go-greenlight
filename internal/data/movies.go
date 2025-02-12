@@ -22,13 +22,22 @@ type Movie struct {
 	Version   int32     `json:"version"`           // The version number starts at 1 and will be incremented each time the movie information is updated
 }
 
+// Interface for the movie model.
+type MovieModelInterface interface {
+	Insert(movie *Movie) error
+	Get(id int64) (*Movie, error)
+	GetAll(title string, genres []string, filters Filters) ([]*Movie, Metadata, error)
+	Update(movie *Movie) error
+	Delete(id int64) error
+}
+
 // Movie model struct that wraps a db connection pool.
 type MovieModel struct {
 	DB *sql.DB
 }
 
 // Insert is a method for inserting a new record in the movies table.
-func (m MovieModel) Insert(movie *Movie) error {
+func (m *MovieModel) Insert(movie *Movie) error {
 	// SQL query for inserting a movie in the db and returning
 	// the system-generated data.
 	query := `INSERT INTO movies (title, year, runtime, genres)
@@ -47,7 +56,7 @@ func (m MovieModel) Insert(movie *Movie) error {
 }
 
 // Get is a method for fetching a specific record from the movies table.
-func (m MovieModel) Get(id int64) (*Movie, error) {
+func (m *MovieModel) Get(id int64) (*Movie, error) {
 	// Sanitize ID.
 	if id < 1 {
 		return nil, ErrRecordNotFound
@@ -90,7 +99,7 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 }
 
 // GetAll is a method that retrieve all movies from the DB.
-func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, Metadata, error) {
+func (m *MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, Metadata, error) {
 	// SQL query to retreive all movie records.
 	// Uses built-in functionality of Postgres to achieve full-text search with lexemes.
 	query := fmt.Sprintf(`SELECT count(*) OVER(), id, created_at, title, year, runtime, genres, version
@@ -148,7 +157,7 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 // condition on an update for a specific record.
 // It updates a record only if the version of the record is the same at
 // the beginning of the request, otherwise returns an ErrEditConflict error.
-func (m MovieModel) Update(movie *Movie) error {
+func (m *MovieModel) Update(movie *Movie) error {
 	// SQL query for completely update a movie.
 	query := `UPDATE movies
 			  SET title = $1, year = $2, runtime = $3, genres = $4, version = version + 1
@@ -178,7 +187,7 @@ func (m MovieModel) Update(movie *Movie) error {
 }
 
 // Delete is a method for deleting a specific record from the movies table.
-func (m MovieModel) Delete(id int64) error {
+func (m *MovieModel) Delete(id int64) error {
 	// Sanitize ID.
 	if id < 1 {
 		return ErrRecordNotFound

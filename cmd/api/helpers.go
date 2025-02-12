@@ -205,6 +205,10 @@ func (app *application) background(fn func()) {
 			}
 		}()
 
+		// Synchronize access to shared data.
+		app.mu.Lock()
+		defer app.mu.Unlock()
+
 		// Executes the function.
 		fn()
 	}()

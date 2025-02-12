@@ -44,7 +44,7 @@ func (app *application) routes() http.Handler {
 
 	// Middleware chain
 	chain := alice.Chain{}
-	if app.config.enableMetrics == true {
+	if app.config.enableMetrics {
 		chain = alice.New(app.metrics, app.recoverPanic, app.rateLimit, app.authenticate)
 	} else {
 		chain = alice.New(app.recoverPanic, app.rateLimit, app.authenticate)
