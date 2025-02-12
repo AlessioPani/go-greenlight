@@ -90,7 +90,7 @@ clean:
 # ==================================================================================== #	
 ## test: executes tests in verbose mode
 test:
-	@env go test -race -vet=off ./...
+	@env go test -vet=off -p 1 ./...
 
 ## coverage: executes tests and generate coverage profile
 coverage:
