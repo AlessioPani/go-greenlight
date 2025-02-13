@@ -10,6 +10,7 @@ import (
 )
 
 // createAuthenticationTokenHandler is the handler that creates the authentication token for the user.
+// Method: POST
 func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Create an anonymous struct to hold the token from the request body.
 	var input struct {
@@ -75,6 +76,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 
 // createPasswordResetTokenHandler is the handler that generates a password reset token and send it
 // to the user's email address.
+// Method: POST
 func (app *application) createPasswordResetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Create an anonymous struct to hold the token from the request body.
 	var input struct {
@@ -145,6 +147,7 @@ func (app *application) createPasswordResetTokenHandler(w http.ResponseWriter, r
 
 // createActivationTokenHandler is the handler that generates a new activation token and send it
 // to the user's email address.
+// Method: POST
 func (app *application) createActivationTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Create an anonymous struct to hold the token from the request body.
 	var input struct {

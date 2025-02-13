@@ -54,8 +54,13 @@ func (u *UserModel) Update(user *data.User) error {
 }
 
 func (u *UserModel) GetByEmail(email string) (*data.User, error) {
-	if email == ActiveUser.Email {
+	switch email {
+	case ActiveUser.Email:
+		ActiveUser.Password.Set("valid_password")
 		return &ActiveUser, nil
+	case InactiveUser.Email:
+		InactiveUser.Password.Set("valid_password")
+		return &InactiveUser, nil
 	}
 
 	return nil, data.ErrRecordNotFound

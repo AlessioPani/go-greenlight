@@ -34,7 +34,7 @@ var passToken = data.Token{
 type TokenModel struct{}
 
 func (t *TokenModel) New(userID int64, ttl time.Duration, scope string) (*data.Token, error) {
-	if userID == 2 {
+	if userID == 5 {
 		return nil, errors.New("while generating a token")
 	}
 
