@@ -8,9 +8,8 @@ The project serves as training for building a REST API app with Go, following (o
 ## Features
 
 - REST APIs for managing movies and users records 
-- Authentication, authorization, panic recovery and custom metrics middlewares
+- Authentication, authorization, panic recovery, basic rate limiter and custom metrics middlewares
 - Registration and authentication of users with stateful tokens
-- Basic rate limiter middleware
 
 
 
