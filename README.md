@@ -16,6 +16,7 @@ The project serves as training for building a REST API app with Go, following (o
 ## Dependencies
 
 - Go 1.23+
+- Golang-migrate
 - Make
 - Docker
 
