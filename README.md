@@ -7,44 +7,61 @@ The project serves as training for building a REST API app with Go, following (o
 
 ## Features
 
-- TBD
+- REST APIs for managing movies and users records 
+- Authentication, panic recovery and custom metrics middlewares
+- Registration and authentication with stateful tokens
+- Basic rate limiter middleware
 
-  
 
-## Dependencies
 
-- Julien Schmidt's [httprouter](https://github.com/julienschmidt/httprouter)
+## Dependencies
 
-- Postgres driver from [pq](https://github.com/lib/pq)
-
-- [Go-mail](https://github.com/go-mail/mail) to send emails
-
-- Justinas's [Alice](https://github.com/justinas/alice) for a more readable middleware chaining
-
-- [Golang-migrate](https://github.com/golang-migrate/migrate) to manage database migrations
-
-- [Rate](golang.org/x/time/rate) package to implement rate limiters
-
-- [bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt) package for hashing alghoritms
-
+- Go 1.23+
 - Make
-
 - Docker
 
-  
 
-## Todo
 
-- Tests
+## Third-party packages
 
-  
+- Julien Schmidt's [httprouter](https://github.com/julienschmidt/httprouter)
+- Postgres driver from [pq](https://github.com/lib/pq)
+- [Go-mail](https://github.com/go-mail/mail) to send emails
+- Justinas's [Alice](https://github.com/justinas/alice) for a more readable middleware chaining
+- [Golang-migrate](https://github.com/golang-migrate/migrate) to manage database migrations
+- [Rate](golang.org/x/time/rate) package to implement rate limiters
+- [bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt) package for hashing alghoritms
+
+
 
 
 ## Usage
 
-- TBD  
+- Clone this repository
 
+  ```bash
+  git clone https://github.com/AlessioPani/go-greenlight.git
+  ```
   
+- Build the docker image to have Postegres and a testing SMTP server running
+
+  ```bash
+  docker-compose up --build 
+  ```
+
+- Migrate the database schema into the docker image
+
+  ```bash
+  make migrate-up
+  ```
+
+- Build and start the application
+
+  ```bash
+  make start
+  ```
+
+
 
 
 ## API structure
