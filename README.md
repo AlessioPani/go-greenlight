@@ -5,16 +5,12 @@ The project serves as training for building a REST API app with Go, following (o
 
 
 
-
-
 ## Features
 
 - REST APIs for managing movies and users records 
-- Authentication, panic recovery and custom metrics middlewares
-- Registration and authentication with stateful tokens
+- Authentication, authorization, panic recovery and custom metrics middlewares
+- Registration and authentication of users with stateful tokens
 - Basic rate limiter middleware
-
-
 
 
 
@@ -23,8 +19,6 @@ The project serves as training for building a REST API app with Go, following (o
 - Go 1.23+
 - Make
 - Docker
-
-
 
 
 
@@ -37,8 +31,6 @@ The project serves as training for building a REST API app with Go, following (o
 - [Golang-migrate](https://github.com/golang-migrate/migrate) to manage database migrations
 - [Rate](golang.org/x/time/rate) package to implement rate limiters
 - [bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt) package for hashing alghoritms
-
-
 
 
 
@@ -72,8 +64,6 @@ The project serves as training for building a REST API app with Go, following (o
 
 
 
-
-
 ## API structure
 
 | Method | URL pattern               | Action                                          |
@@ -91,8 +81,6 @@ The project serves as training for building a REST API app with Go, following (o
 | POST   | /v1/tokens/password-reset | Generate a new password-reset token             |
 | POST   | /v1/tokens/activation     | Generate a new activation token                 |
 | GET    | /debug/vars               | Display application metrics                     |
-
-
 
 
 
