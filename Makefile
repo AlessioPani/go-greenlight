@@ -82,8 +82,8 @@ migration:
 ## clean: runs go clean and deletes the executable
 clean:
 	@echo "Cleaning..."
-	@go clean
-	@rm ./bin/api/${BINARY_NAME}
+	@go clean -testcache
+	@-rm ./bin/api/${BINARY_NAME}
 
 # ==================================================================================== #
 # QUALITY CONTROL
@@ -94,7 +94,7 @@ test:
 
 ## coverage: executes tests and generate coverage profile
 coverage:
-	@env go test -coverprofile=./coverage.out  ./... && go tool cover -html=./coverage.out
+	@env go test ./... -coverprofile=./coverage.out  -coverpkg=./... && go tool cover -html=./coverage.out
 
 ## tidy: format all .go files and tidy module dependencies
 tidy:
