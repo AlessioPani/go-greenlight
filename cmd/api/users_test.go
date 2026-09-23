@@ -12,7 +12,7 @@ import (
 	"github.com/AlessioPani/go-greenlight/internal/data/mocks"
 )
 
-// Test method used for the registerUserHandler http.Handler.
+// Test registerUserHandler.
 func TestRegisterUserHandler(t *testing.T) {
 	// Get test application config and handler.
 	app := newTestApplication()
@@ -76,7 +76,7 @@ func TestRegisterUserHandler(t *testing.T) {
 	}
 }
 
-// Test method used for the activateUserHandler http.Handler.
+// Test activateUserHandler.
 func TestActivateUserHandler(t *testing.T) {
 	{
 		// Get test application config and handler.
@@ -137,7 +137,7 @@ func TestActivateUserHandler(t *testing.T) {
 	}
 }
 
-// Test method used for the updateUserPasswordHandler http.handler
+// Test updateUserPasswordHandler.
 func TestUpdateUserPasswordHandler(t *testing.T) {
 	// Get test application config and handler.
 	app := newTestApplication()

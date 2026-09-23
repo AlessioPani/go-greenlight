@@ -24,7 +24,7 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 	// Encode the data to JSON, returning the error if there was one.
 	// Use the json.MarshalIndent() function so that whitespace is added to the encoded JSON.
 	// Here we use no line prefix ("") and tab indents ("\t") for each element.
-	// MashalIndent is quite slower compared to Marshal. For resource-constrained application
+	// MarshalIndent is slower than Marshal. For resource-constrained applications,
 	// use json.Marshal instead.
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
@@ -167,7 +167,7 @@ func (app *application) readCSV(qs url.Values, key string, defaultValue []string
 }
 
 // readInt reads a string value from the query string and then converts it into an int.
-// If no matching key could be found or an error occurs when converting, it returns
+// If no matching key is found or conversion fails, this function returns
 // the provided default value.
 func (app *application) readInt(qs url.Values, key string, defaultValue int, v *validator.Validator) int {
 	// Gets a string value from the query.
@@ -178,7 +178,7 @@ func (app *application) readInt(qs url.Values, key string, defaultValue int, v *
 		return defaultValue
 	}
 
-	// Checks for errors during the str -> int conversation. If so, use the default value.
+	// Check for conversion errors and use the default value if conversion fails.
 	i, err := strconv.Atoi(s)
 	if err != nil {
 		v.AddError(key, "must be an integer value")
@@ -189,8 +189,7 @@ func (app *application) readInt(qs url.Values, key string, defaultValue int, v *
 
 }
 
-// background is an helper method that runs a function in background
-// in a separate goroutine and recovers from panic.
+// background runs fn in a separate goroutine and recovers from panics.
 func (app *application) background(fn func()) {
 	// Increment the WaitGroup counter.
 	app.wg.Add(1)
@@ -205,7 +204,7 @@ func (app *application) background(fn func()) {
 			}
 		}()
 
-		// // Executes the function.
+		// Execute the function.
 		fn()
 	}()
 }

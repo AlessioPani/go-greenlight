@@ -11,7 +11,7 @@ import (
 	"github.com/lib/pq"
 )
 
-// Struct that defines a movie object.
+// Movie represents a movie record.
 type Movie struct {
 	ID        int64     `json:"id"`                // Unique integer ID for the movie
 	CreatedAt time.Time `json:"-"`                 // Timestamp for when the movie is added to our database
@@ -22,7 +22,7 @@ type Movie struct {
 	Version   int32     `json:"version"`           // The version number starts at 1 and will be incremented each time the movie information is updated
 }
 
-// Interface for the movie model.
+// MovieModelInterface defines the movie data operations.
 type MovieModelInterface interface {
 	Insert(movie *Movie) error
 	Get(id int64) (*Movie, error)
@@ -31,7 +31,7 @@ type MovieModelInterface interface {
 	Delete(id int64) error
 }
 
-// Movie model struct that wraps a db connection pool.
+// MovieModel provides access to movie records in the database.
 type MovieModel struct {
 	DB *sql.DB
 }
@@ -47,7 +47,7 @@ func (m *MovieModel) Insert(movie *Movie) error {
 	// Values for the placeholders in the query.
 	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
 
-	// Creates a context with a 3 seconds timeout.
+	// Create a context with a three-second timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -70,7 +70,7 @@ func (m *MovieModel) Get(id int64) (*Movie, error) {
 	// movie struct to be returned back.
 	movie := Movie{}
 
-	// Creates a context with a 3 seconds timeout.
+	// Create a context with a three-second timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -85,7 +85,7 @@ func (m *MovieModel) Get(id int64) (*Movie, error) {
 		&movie.Version,
 	)
 
-	// Checks for errors during Scan().
+	// Handle errors returned while scanning the row.
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -98,9 +98,9 @@ func (m *MovieModel) Get(id int64) (*Movie, error) {
 	return &movie, nil
 }
 
-// GetAll is a method that retrieve all movies from the DB.
+// GetAll retrieves movies matching the supplied filters.
 func (m *MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, Metadata, error) {
-	// SQL query to retreive all movie records.
+	// SQL query to retrieve the requested records.
 	// Uses built-in functionality of Postgres to achieve full-text search with lexemes.
 	query := fmt.Sprintf(`SELECT count(*) OVER(), id, created_at, title, year, runtime, genres, version
 			 	          FROM movies
@@ -109,7 +109,7 @@ func (m *MovieModel) GetAll(title string, genres []string, filters Filters) ([]*
 			  			  ORDER BY %s %s, id ASC
 			  			  LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortDirection())
 
-	// Creates a context with a 3 seconds timeout.
+	// Create a context with a three-second timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -141,7 +141,7 @@ func (m *MovieModel) GetAll(title string, genres []string, filters Filters) ([]*
 		movies = append(movies, &movie)
 	}
 
-	// Checks again for errors.
+	// Check for errors encountered while iterating over the rows.
 	if err = rows.Err(); err != nil {
 		return nil, Metadata{}, err
 	}
@@ -158,7 +158,7 @@ func (m *MovieModel) GetAll(title string, genres []string, filters Filters) ([]*
 // It updates a record only if the version of the record is the same at
 // the beginning of the request, otherwise returns an ErrEditConflict error.
 func (m *MovieModel) Update(movie *Movie) error {
-	// SQL query for completely update a movie.
+	// SQL query for updating a movie record.
 	query := `UPDATE movies
 			  SET title = $1, year = $2, runtime = $3, genres = $4, version = version + 1
 			  WHERE id = $5 AND version = $6
@@ -167,7 +167,7 @@ func (m *MovieModel) Update(movie *Movie) error {
 	// Values for the placeholders in the query.
 	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres), movie.ID, movie.Version}
 
-	// Creates a context with a 3 seconds timeout.
+	// Create a context with a three-second timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -197,7 +197,7 @@ func (m *MovieModel) Delete(id int64) error {
 	query := `DELETE FROM movies
 			  WHERE id = $1`
 
-	// Creates a context with a 3 seconds timeout.
+	// Create a context with a three-second timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -222,7 +222,7 @@ func (m *MovieModel) Delete(id int64) error {
 	return nil
 }
 
-// ValidateMovie is a method that validates input data.
+// ValidateMovie checks that the movie fields contain valid values.
 func ValidateMovie(v *validator.Validator, movie *Movie) {
 	// Title
 	v.Check(movie.Title != "", "title", "must be provided")

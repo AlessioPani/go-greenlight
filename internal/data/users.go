@@ -18,7 +18,7 @@ var ErrDuplicateEmail = errors.New("duplicate email")
 // Anonymous user.
 var AnonymouseUser = &User{}
 
-// User is a struct that represents an individual user.
+// User represents an individual user.
 type User struct {
 	ID        int64     `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
@@ -161,7 +161,7 @@ func (m *UserModel) GetForToken(tokenScope string, tokenPlaintext string) (*User
 	return &user, nil
 }
 
-// password is a struct that contains plaintext password and the related
+// password contains a plaintext password and its related
 // hash, expressed in slice of bytes.
 type password struct {
 	plaintext *string

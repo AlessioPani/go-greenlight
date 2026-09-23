@@ -77,7 +77,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Gets the movie and checks for errors.
+	// Retrieve the movie and handle any errors.
 	movie, err := app.models.Movies.Get(id)
 	if err != nil {
 		switch {
@@ -90,7 +90,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	// Writes back the movie into an enveloped JSON.
+	// Return the movie in a JSON envelope.
 	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

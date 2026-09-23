@@ -1,15 +1,14 @@
 # Go Greenlight
-Go Greenlight is a clone of the Open Movie Database core API written in Go. 
 
-The project serves as training for building a REST API app with Go, following (or at least trying to follow) best practices for project structure, dependency management, and code organization.
+Go Greenlight is a movie and user management REST API written in Go. It is a learning project based on the core API of the Open Movie Database, with an emphasis on project structure, dependency management, and code organization.
 
 
 
 ## Features
 
-- REST APIs for managing movies and users records 
+- REST endpoints for managing movie and user records
 - Authentication, authorization, panic recovery, basic rate limiter and custom metrics middlewares
-- Registration and authentication of users with stateful tokens
+- User registration and authentication using stateful tokens
 
 
 
@@ -30,7 +29,7 @@ The project serves as training for building a REST API app with Go, following (o
 - Justinas's [Alice](https://github.com/justinas/alice) for a more readable middleware chaining
 - [Golang-migrate](https://github.com/golang-migrate/migrate) to manage database migrations
 - [Rate](golang.org/x/time/rate) package to implement rate limiters
-- [bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt) package for hashing alghoritms
+- The [bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt) package for password hashing
 
 
 
@@ -43,19 +42,19 @@ The project serves as training for building a REST API app with Go, following (o
   git clone https://github.com/AlessioPani/go-greenlight.git
   ```
   
-- Build the docker image to have Postegres and a testing SMTP server running
+- Start the Docker services, including PostgreSQL and a test SMTP server:
 
   ```bash
-  docker-compose up --build 
+  docker-compose up --build
   ```
 
-- Migrate the database schema into the docker image
+- Apply the database migrations:
 
   ```bash
   make migrate-up
   ```
 
-- Build and start the application
+- Build and start the application:
 
   ```bash
   make start
@@ -69,13 +68,13 @@ The project serves as training for building a REST API app with Go, following (o
 | Method | URL pattern               | Action                                          |
 | ------ | ------------------------- | ----------------------------------------------- |
 | GET    | /v1/healthcheck           | Show application health and version information |
-| GET    | /v1/movies                | Show the details of all movies                  |
+| GET    | /v1/movies                | List movies                                     |
 | POST   | /v1/movies                | Create a new movie                              |
-| GET    | /v1/movies/:id            | Show the details of a specific movie            |
-| PATCH  | /v1/movies/:id            | Update the details of a specific movie          |
+| GET    | /v1/movies/:id            | Show a specific movie                           |
+| PATCH  | /v1/movies/:id            | Update a specific movie                         |
 | DELETE | /v1/movies/:id            | Delete a specific movie                         |
 | POST   | /v1/users                 | Register a new user                             |
-| PUT    | /v1/users/activated       | Activate a specific user                        |
+| PUT    | /v1/users/activated       | Activate a user                                 |
 | PUT    | /v1/users/password        | Update the password for a specific user         |
 | POST   | /v1/tokens/authentication | Generate a new authentication token             |
 | POST   | /v1/tokens/password-reset | Generate a new password-reset token             |

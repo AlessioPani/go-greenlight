@@ -20,7 +20,7 @@ import (
 // version is the application version number.
 const version = "1.0.0"
 
-// config is a struct that contains the configuration for the application.
+// config contains the application configuration.
 type config struct {
 	port          int
 	env           string
@@ -53,7 +53,7 @@ type config struct {
 	}
 }
 
-// application is a struct that contains the dependencies for the application.
+// application holds the dependencies used by the application.
 type application struct {
 	config config
 	logger *slog.Logger
@@ -129,7 +129,7 @@ func main() {
 		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 
-	// Gets the configured mux with httprouter and runs it.
+	// Configure the router and start the server.
 	err = app.serve()
 	if err != nil {
 		logger.Error(err.Error())

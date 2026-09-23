@@ -6,7 +6,7 @@ import (
 	"github.com/AlessioPani/go-greenlight/internal/validator"
 )
 
-// Filters is a struct that contains filters parameter of a request query.
+// Filters contains the filters parsed from a request query.
 type Filters struct {
 	Page         int
 	PageSize     int
@@ -34,17 +34,17 @@ func (f Filters) sortDirection() string {
 	return "ASC"
 }
 
-// limit is a method that returns the pagesize of a filter.
+// limit returns the page size for the filter.
 func (f Filters) limit() int {
 	return f.PageSize
 }
 
-// offset is a method that returns the page of a filter.
+// offset returns the number of records to skip for the filter.
 func (f Filters) offset() int {
 	return (f.Page - 1) * f.PageSize
 }
 
-// ValidateFilters is an helper method to validate a Filters struct.
+// ValidateFilters checks that the filter values are valid.
 func ValidateFilters(v *validator.Validator, f Filters) {
 	v.Check(f.Page > 0, "page", "must be greater than zero")
 	v.Check(f.Page <= 10_000_000, "page", "must be a maximum of 10 million")
@@ -53,7 +53,7 @@ func ValidateFilters(v *validator.Validator, f Filters) {
 	v.Check(validator.PermittedValue(f.Sort, f.SortSafeList...), "sort", "invalid sort value")
 }
 
-// Metadata is a struct that contains pagination metadata.
+// Metadata contains pagination details for a response.
 type Metadata struct {
 	CurrentPage  int `json:"current_page,omitempty"`
 	PageSize     int `json:"page_size,omitempty"`

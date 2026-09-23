@@ -101,7 +101,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// activateUserHandler is the handler that creates a deactivated user.
+// activateUserHandler activates a user with a valid activation token.
 // Method: PUT
 func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Create an anonymous struct to hold the token from the request body.
@@ -151,7 +151,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Delete all the token related to the user and send a response to the user.
+	// Delete all activation tokens for the user.
 	err = app.models.Tokens.DeleteAllForUser(data.ScopeActivation, user.ID)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

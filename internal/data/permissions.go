@@ -9,38 +9,38 @@ import (
 	"github.com/lib/pq"
 )
 
-// Permissions is a slice of string used to contain the permission for
+// Permissions contains the permission codes assigned to
 // a single user.
 type Permissions []string
 
-// Include is a method used to check if a specific permission is included
-// in the Permission slice.
+// Include reports whether the permission code is present in
+// the Permissions slice.
 func (p Permissions) Include(code string) bool {
 	return slices.Contains(p, code)
 }
 
-// Interface for the permission model.
+// PermissionModelInterface defines permission data operations.
 type PermissionModelInterface interface {
 	GetAllForUser(userID int64) (Permissions, error)
 	AddForUser(userID int64, codes ...string) error
 }
 
-// Permission model struct that wraps a db connection pool.
+// PermissionModel provides access to user permissions.
 type PermissionModel struct {
 	DB *sql.DB
 }
 
-// GetAllForUser is a method that retrieves all the permission for a specific
-// user from the DB.
+// GetAllForUser retrieves all permission codes assigned to a
+// user.
 func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
-	// SQL query to retreive all movie records.
+	// SQL query to retrieve the user permissions.
 	query := `SELECT permissions.code
 			  FROM permissions
 			  INNER JOIN users_permissions ON users_permissions.permission_id = permissions.id
 			  INNER JOIN users ON users.id = users_permissions.user_id
 			  WHERE users.id = $1`
 
-	// Creates a context with a 3 seconds timeout.
+	// Create a context with a three-second timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -64,7 +64,7 @@ func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 		permissions = append(permissions, permission)
 	}
 
-	// Checks again for errors.
+	// Check for errors encountered while iterating over the rows.
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
@@ -74,12 +74,12 @@ func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 
 // AddForUser is a method used to add permissions to a user.
 func (m PermissionModel) AddForUser(userID int64, codes ...string) error {
-	// SQL query to retreive all movie records.
+	// SQL query to add the requested permissions to the user.
 	query := `INSERT INTO users_permissions
 			  SELECT $1, permissions.id FROM permissions
 			  WHERE permissions.code = ANY($2)`
 
-	// Creates a context with a 3 seconds timeout.
+	// Create a context with a three-second timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 

@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-// server is a method that configures and runs an http.Server
-// and checks for shutdowns in background with a gorouting.
+// serve configures and runs an HTTP server
+// and listens for shutdown signals in a background goroutine.
 func (app *application) serve() error {
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", app.config.port),
@@ -36,7 +36,7 @@ func (app *application) serve() error {
 		s := <-quit
 		app.logger.Info("shutting down server", "signal", s.String())
 
-		// Create a context with a 30 seconds of timeout.
+		// Create a context with a 30-second timeout.
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
@@ -64,14 +64,14 @@ func (app *application) serve() error {
 	// Calling Shutdown() will cause ListenAndServer to immediately return an
 	// ErrServerClosed error. If this occur, it means that the graceful shutdown
 	// has started correctly.
-	// Otherwise we return the error because it is a unexpected behaviour.
+	// Otherwise, return the unexpected error.
 	err := server.ListenAndServe()
 	if !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 
-	// Wait the result of Shutdown. If it is an error, return it back.
-	// Otherwise log a "stopped server" message and returns no error.
+	// Wait for the shutdown result and return any error.
+	// Otherwise, log that the server stopped and return nil.
 	err = <-shutdownError
 	if err != nil {
 		return err

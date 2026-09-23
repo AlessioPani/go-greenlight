@@ -16,8 +16,7 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 		},
 	}
 
-	// Convert data in JSON with the specified status code using an helper method and
-	// checks for errors.
+	// Encode the response as JSON with the specified status code.
 	err := app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
