@@ -45,6 +45,13 @@ func (u *UserModel) Insert(user *data.User) error {
 	return nil
 }
 
+func (u *UserModel) Register(user *data.User, ttl time.Duration) (*data.Token, error) {
+	if err := u.Insert(user); err != nil {
+		return nil, err
+	}
+	return &data.Token{Plaintext: "activationToken", UserID: user.ID, Scope: data.ScopeActivation}, nil
+}
+
 func (u *UserModel) Update(user *data.User) error {
 	if user.ID == 1 || user.ID == 2 {
 		return nil

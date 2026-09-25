@@ -37,6 +37,7 @@ func (u *User) IsAnonymous() bool {
 // Interface for the user model.
 type UserModelInterface interface {
 	Insert(user *User) error
+	Register(user *User, ttl time.Duration) (*Token, error)
 	Update(user *User) error
 	GetByEmail(email string) (*User, error)
 	GetForToken(tokenScope string, tokenPlaintext string) (*User, error)
@@ -70,6 +71,39 @@ func (m *UserModel) Insert(user *User) error {
 
 	return nil
 
+}
+
+// Register atomically creates a user, its default permission, and activation token.
+func (m *UserModel) Register(user *User, ttl time.Duration) (*Token, error) {
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	query := `INSERT INTO users (name, email, password_hash, activated)
+	          VALUES ($1, $2, $3, $4) RETURNING id, created_at, version`
+	err = tx.QueryRow(query, user.Name, user.Email, user.Password.hash, user.Activated).Scan(&user.ID, &user.CreatedAt, &user.Version)
+	if err != nil {
+		if strings.Contains(err.Error(), "users_email_key") {
+			return nil, ErrDuplicateEmail
+		}
+		return nil, err
+	}
+	if _, err = tx.Exec(`INSERT INTO users_permissions SELECT $1, id FROM permissions WHERE code = $2`, user.ID, "movies:read"); err != nil {
+		return nil, err
+	}
+	token, err := generateToken(user.ID, ttl, ScopeActivation)
+	if err != nil {
+		return nil, err
+	}
+	if _, err = tx.Exec(`INSERT INTO tokens (hash, user_id, expiry, scope) VALUES ($1, $2, $3, $4)`, token.Hash, token.UserID, token.Expiry, token.Scope); err != nil {
+		return nil, err
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+	return token, nil
 }
 
 // GetByEmail is a method used to retrieve a user by its email.
