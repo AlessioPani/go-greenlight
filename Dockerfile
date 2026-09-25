@@ -1,5 +1,5 @@
 # Init script for Postgres and update permissions.
-FROM postgres:17
+FROM postgres:17-bookworm
 
 COPY ./db-data/init.sh /docker-entrypoint-initdb.d/
 

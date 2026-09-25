@@ -1,7 +1,7 @@
 services:
   # POSTGRES
   postgres:
-    image: "postgres:17"
+    image: "postgres:17-bookworm"
     build:
       context: .
       dockerfile: Dockerfile
@@ -14,6 +14,13 @@ services:
       POSTGRES_DB: greenlight
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d greenlight" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
   # MAILHOG
   mailhog:
     image: 'jcalonso/mailhog:latest'
@@ -21,3 +28,41 @@ services:
       - "1025:1025"
       - "8025:8025"
     restart: always
+
+  # Database migration
+  migrate:
+    image: migrate/migrate:v4.19.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations:ro
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://greenlight:secret_password@postgres:5432/greenlight?sslmode=disable"
+      - "up"
+    restart: "no"
+
+  # GO API
+  api:
+    image: greenlight-api
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "${API_PORT:-4000}:4000"
+    environment:
+      GREENLIGHT_DB_DSN: postgres://greenlight:secret_password@postgres:5432/greenlight?sslmode=disable
+    command:
+      - "-port=4000"
+      - "-env=development"
+      - "-smtp-host=mailhog"
+      - "-smtp-port=1025"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+    restart: on-failure
