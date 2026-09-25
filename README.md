@@ -14,7 +14,7 @@ Go Greenlight is a movie and user management REST API written in Go. It is a lea
 
 ## Dependencies
 
-- Go 1.23+
+- Go 1.25+
 - Golang-migrate
 - Make
 - Docker
