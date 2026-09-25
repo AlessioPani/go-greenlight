@@ -89,7 +89,7 @@ func TestCreatePasswordResetTokenHandler(t *testing.T) {
 	}{
 		{"valid token", "POST", "/v1/tokens/password-reset", mocks.ActiveUser.Email, http.StatusAccepted},
 		{"invalid email", "POST", "/v1/tokens/password-reset", "mail", http.StatusUnprocessableEntity},
-		{"invalid credentials", "POST", "/v1/tokens/password-reset", "invalid@mail.com", http.StatusUnprocessableEntity},
+		{"unknown email gets generic response", "POST", "/v1/tokens/password-reset", "invalid@mail.com", http.StatusAccepted},
 	}
 
 	// Executes tests.
@@ -147,9 +147,9 @@ func TestCreateActivationTokenHandler(t *testing.T) {
 		expectedResult int
 	}{
 		{"valid user", "POST", "/v1/tokens/activation", mocks.InactiveUser.Email, http.StatusAccepted},
-		{"invalid user", "POST", "/v1/tokens/activation", mocks.ActiveUser.Email, http.StatusUnprocessableEntity},
+		{"already activated user gets generic response", "POST", "/v1/tokens/activation", mocks.ActiveUser.Email, http.StatusAccepted},
 		{"invalid email", "POST", "/v1/tokens/activation", "mail", http.StatusUnprocessableEntity},
-		{"invalid credentials", "POST", "/v1/tokens/activation", "invalid@mail.com", http.StatusUnprocessableEntity},
+		{"unknown email gets generic response", "POST", "/v1/tokens/activation", "invalid@mail.com", http.StatusAccepted},
 	}
 
 	// Executes tests.
