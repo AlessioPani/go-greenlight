@@ -42,26 +42,13 @@ Go Greenlight is a movie and user management REST API written in Go. It is a lea
   git clone https://github.com/AlessioPani/go-greenlight.git
   ```
   
-- Start the Docker services, including PostgreSQL and a test SMTP server:
+- Build and start PostgreSQL, MailHog, and the Go API:
 
   ```bash
-  docker-compose up --build
+  docker-compose up --build -d
   ```
 
-- Apply the database migrations:
-
-  ```bash
-  make migrate-up
-  ```
-
-- Build and start the application:
-
-  ```bash
-  make start
-  ```
-
-
-
+Compose runs the database migrations after PostgreSQL is ready and starts the API only after the migrations finish. The API is available at `http://localhost:4001` by default; MailHog's inbox is at `http://localhost:8025`. Set `API_PORT` to choose another host port (for example, `API_PORT=4000 docker-compose up --build -d`). To stop the services, run `docker-compose down`. The PostgreSQL data is stored in `db-data/postgres/` and is retained when the containers stop. `make migrate-up` remains available when applying migrations manually to a database.
 
 ## API structure
 
@@ -80,6 +67,54 @@ Go Greenlight is a movie and user management REST API written in Go. It is a lea
 | POST   | /v1/tokens/password-reset | Generate a new password-reset token             |
 | POST   | /v1/tokens/activation     | Generate a new activation token                 |
 | GET    | /debug/vars               | Display application metrics                     |
+
+
+## Register, activate, and authenticate
+
+The examples below use the API started with Docker Compose. Replace the sample password and email with your own values.
+
+### 1. Register an account
+
+```bash
+  curl -i -X POST http://localhost:4001/v1/users \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"John Doe","email":"mail@@example.com","password":"my-password"}'
+```
+
+A successful request returns `201 Created`. The API sends an activation email to MailHog. Open `http://localhost:8025` and copy the token from the message. Activation tokens expire after three days and can be used once.
+
+### 2. Activate the account
+
+Send the activation token in the request body:
+
+```bash
+  curl -i -X PUT http://localhost:4001/v1/users/activated \
+  -H 'Content-Type: application/json' \
+  -d '{"token":"<activation_token_from_mailhog>"}'
+```
+
+The response includes the activated user. Registration grants the `movies:read` permission by default.
+
+### 3. Create an authentication token
+
+```bash
+  curl -i -X POST http://localhost:4001/v1/tokens/authentication \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"ada@example.com","password":"correct-horse-battery"}'
+```
+
+Copy the `authentication_token.token` value from the response. Authentication tokens expire after 24 hours.
+
+### 4. Call an authenticated endpoint
+
+Pass the token as a Bearer token. For example, listing movies requires `movies:read`:
+
+```bash
+  curl -i http://localhost:4001/v1/movies \
+  -H 'Authorization: Bearer <authentication_token>'
+```
+
+To request a password-reset token, post the account email to `/v1/tokens/password-reset`; the instructions are delivered through MailHog. The password-reset token expires after 45 minutes and is submitted with the new password to `PUT /v1/users/password`.
 
 
 
