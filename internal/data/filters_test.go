@@ -71,26 +71,20 @@ func TestSortColumn(t *testing.T) {
 		name           string
 		filter         Filters
 		expectedResult string
+		expectError    bool
 	}{
-		{"no hyphen", Filters{Page: 1, PageSize: 2, Sort: "title", SortSafeList: sortSafeList}, "title"},
-		{"hyphen", Filters{Page: 1, PageSize: 2, Sort: "-title", SortSafeList: sortSafeList}, "title"},
-		{"panic", Filters{Page: 1, PageSize: 2, Sort: "wrong", SortSafeList: sortSafeList}, ""},
+		{"no hyphen", Filters{Page: 1, PageSize: 2, Sort: "title", SortSafeList: sortSafeList}, "title", false},
+		{"hyphen", Filters{Page: 1, PageSize: 2, Sort: "-title", SortSafeList: sortSafeList}, "title", false},
+		{"unsafe sort returns error", Filters{Page: 1, PageSize: 2, Sort: "wrong", SortSafeList: sortSafeList}, "", true},
 	}
 
 	// Executes tests.
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// Defer function to verify if the sortColumn function did panic during
-			// the "panic" test execution.
-			defer func() {
-				if err := recover(); test.name == "panic" && err == nil {
-					t.Errorf("the function did not panic")
-				}
-			}()
-
-			// Checks the results.
 			result, err := test.filter.sortColumn()
-			if err != nil { t.Fatal(err) }
+			if (err != nil) != test.expectError {
+				t.Fatalf("got error %v, expected error: %t", err, test.expectError)
+			}
 			if result != test.expectedResult {
 				t.Errorf("got %s, expected %s", result, test.expectedResult)
 			}
