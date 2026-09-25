@@ -43,9 +43,8 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 	// JSON response.
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write(js)
-
-	return nil
+	_, err = w.Write(js)
+	return err
 }
 
 // Define a readJSON() helper for reading requests. This takes the destination
@@ -200,7 +199,7 @@ func (app *application) background(fn func()) {
 		// Recover from any panic.
 		defer func() {
 			if err := recover(); err != nil {
-				app.logger.Error("%v", err)
+				app.logger.Error(fmt.Sprintf("%v", err))
 			}
 		}()
 

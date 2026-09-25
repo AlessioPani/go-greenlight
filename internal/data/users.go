@@ -113,6 +113,8 @@ func (m *UserModel) Update(user *User) error {
 		switch {
 		case strings.Contains(err.Error(), "users_email_key"):
 			return ErrDuplicateEmail
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
 		default:
 			return err
 		}
@@ -173,7 +175,7 @@ type password struct {
 func (p *password) Set(plaintextPassword string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(plaintextPassword), 12)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	p.plaintext = &plaintextPassword
