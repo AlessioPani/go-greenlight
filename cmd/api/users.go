@@ -56,8 +56,8 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Insert the user data into the database.
-	err = app.models.Users.Insert(user)
+	// Create the user, default permission, and activation token atomically.
+	token, err := app.models.Users.Register(user, 3*24*time.Hour)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrDuplicateEmail):
@@ -66,20 +66,6 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
-		return
-	}
-
-	// Add a movies:read permission to the user.
-	err = app.models.Permissions.AddForUser(user.ID, "movies:read")
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-
-	// Generate a token for the new user.
-	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, data.ScopeActivation)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
 		return
 	}
 
