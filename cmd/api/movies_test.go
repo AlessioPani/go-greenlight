@@ -12,7 +12,7 @@ import (
 	"github.com/AlessioPani/go-greenlight/internal/data/mocks"
 )
 
-// Test method used for the createMovieHandler http.Handler.
+// TestCreateMovieHandler covers successful creation and validation or model failures.
 func TestCreateMovieHandler(t *testing.T) {
 	// Get test application config and handler.
 	app := newTestApplication()
@@ -77,7 +77,7 @@ func TestCreateMovieHandler(t *testing.T) {
 	}
 }
 
-// Test method used for the showMovieHandler http.Handler.
+// TestShowMovieHandler covers found, missing, malformed, and unsupported requests.
 func TestShowMovieHandler(t *testing.T) {
 	// Get test application config and handler.
 	app := newTestApplication()
@@ -124,7 +124,7 @@ func TestShowMovieHandler(t *testing.T) {
 	}
 }
 
-// Test method used for the updateMovieHandler http.Handler.
+// TestUpdateMovieHandler covers full updates, validation, missing records, and conflicts.
 func TestUpdateMovieHandler(t *testing.T) {
 	// Get test application config and handler.
 	app := newTestApplication()
@@ -192,6 +192,7 @@ func TestUpdateMovieHandler(t *testing.T) {
 	}
 }
 
+// TestUpdateMovieHandlerPartialAndInvalidPayloads covers sparse patches and rejected values.
 func TestUpdateMovieHandlerPartialAndInvalidPayloads(t *testing.T) {
 	tests := []struct {
 		name            string
@@ -221,7 +222,7 @@ func TestUpdateMovieHandlerPartialAndInvalidPayloads(t *testing.T) {
 	}
 }
 
-// Test method used for the deleteMovieHandler http.Handler.
+// TestDeleteMovieHandler covers successful deletion and missing records.
 func TestDeleteMovieHandler(t *testing.T) {
 	// Get test application config and handler.
 	app := newTestApplication()
@@ -267,7 +268,7 @@ func TestDeleteMovieHandler(t *testing.T) {
 
 }
 
-// Test method used for the listMovieHandler http.Handler.
+// TestListMovieHandler covers valid filters, invalid filters, and model failures.
 func TestListMovieHandler(t *testing.T) {
 	// Get test application config and handler.
 	app := newTestApplication()

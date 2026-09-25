@@ -12,7 +12,7 @@ import (
 	"github.com/AlessioPani/go-greenlight/internal/data/mocks"
 )
 
-// Test registerUserHandler.
+// TestRegisterUserHandler covers successful registration and validation failures.
 func TestRegisterUserHandler(t *testing.T) {
 	// Get test application config and handler.
 	app := newTestApplication()
@@ -78,7 +78,7 @@ func TestRegisterUserHandler(t *testing.T) {
 	}
 }
 
-// Test activateUserHandler.
+// TestActivateUserHandler covers valid, expired, malformed, and conflicting tokens.
 func TestActivateUserHandler(t *testing.T) {
 	{
 		// Get test application config and handler.
@@ -140,6 +140,7 @@ func TestActivateUserHandler(t *testing.T) {
 	}
 }
 
+// TestContextGetUserPanicsWhenMissing documents the required user-context invariant.
 func TestContextGetUserPanicsWhenMissing(t *testing.T) {
 	defer func() {
 		if recover() == nil {
@@ -149,7 +150,7 @@ func TestContextGetUserPanicsWhenMissing(t *testing.T) {
 	newTestApplication().contextGetUser(httptest.NewRequest(http.MethodGet, "/", nil))
 }
 
-// Test updateUserPasswordHandler.
+// TestUpdateUserPasswordHandler covers reset validation, expired tokens, and edit conflicts.
 func TestUpdateUserPasswordHandler(t *testing.T) {
 	// Get test application config and handler.
 	app := newTestApplication()
