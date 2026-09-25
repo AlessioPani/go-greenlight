@@ -109,3 +109,12 @@ func (app *application) notPermittedResponse(w http.ResponseWriter, r *http.Requ
 	message := "your user account doesn't have the necessary permissions to access this resource"
 	app.errorResponse(w, r, http.StatusForbidden, message)
 }
+
+// tokenRequestAcceptedResponse sends the generic response for password reset
+// and activation token requests, regardless of account eligibility.
+func (app *application) tokenRequestAcceptedResponse(w http.ResponseWriter, r *http.Request) {
+	message := "if the account is eligible, instructions will be sent by email"
+	if err := app.writeJSON(w, http.StatusAccepted, envelope{"message": message}, nil); err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}

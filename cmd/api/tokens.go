@@ -102,8 +102,7 @@ func (app *application) createPasswordResetTokenHandler(w http.ResponseWriter, r
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			v.AddError("email", "no matching email address found")
-			app.failedValidationResponse(w, r, v.Errors)
+			app.tokenRequestAcceptedResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
@@ -111,8 +110,7 @@ func (app *application) createPasswordResetTokenHandler(w http.ResponseWriter, r
 	}
 
 	if !user.Activated {
-		v.AddError("email", "user account must be activated")
-		app.failedValidationResponse(w, r, v.Errors)
+		app.tokenRequestAcceptedResponse(w, r)
 		return
 	}
 
@@ -173,8 +171,7 @@ func (app *application) createActivationTokenHandler(w http.ResponseWriter, r *h
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			v.AddError("email", "no matching email address found")
-			app.failedValidationResponse(w, r, v.Errors)
+			app.tokenRequestAcceptedResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
@@ -183,8 +180,7 @@ func (app *application) createActivationTokenHandler(w http.ResponseWriter, r *h
 
 	// Check if the user is activated.
 	if user.Activated {
-		v.AddError("email", "user has already been activated")
-		app.failedValidationResponse(w, r, v.Errors)
+		app.tokenRequestAcceptedResponse(w, r)
 		return
 	}
 
