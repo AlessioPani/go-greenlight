@@ -1,7 +1,7 @@
 services:
   # POSTGRES
   postgres:
-    image: "postgres"
+    image: "postgres:17"
     build:
       context: .
       dockerfile: Dockerfile
