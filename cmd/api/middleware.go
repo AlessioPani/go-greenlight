@@ -46,20 +46,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 	var mu sync.Mutex
 	var clients = make(map[string]*client)
 
-	// Launch a goroutine which removes old entries from the clients map once every minute.
-	go func() {
-		for {
-			time.Sleep(time.Minute)
-
-			mu.Lock()
-			for ip, client := range clients {
-				if time.Since(client.lastSeen) > 3*time.Minute {
-					delete(clients, ip)
-				}
-			}
-			mu.Unlock()
-		}
-	}()
+	var lastCleanup time.Time
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if app.config.limiter.enabled {
@@ -72,6 +59,14 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 
 			// Maps are not safe for concurrent use. We use mutex to safely interact with the clients map.
 			mu.Lock()
+			if time.Since(lastCleanup) > time.Minute {
+				for clientIP, client := range clients {
+					if time.Since(client.lastSeen) > 3*time.Minute {
+						delete(clients, clientIP)
+					}
+				}
+				lastCleanup = time.Now()
+			}
 
 			// For the current client, set up a new limiter of 2 requests per second with a maximum
 			// of 4 requests in a single burst.
