@@ -30,6 +30,8 @@ func TestRegisterUserHandler(t *testing.T) {
 		{"user created", "POST", "/v1/users", mocks.InactiveUser, "test_password", http.StatusCreated},
 		{"email already used", "POST", "/v1/users", mocks.ActiveUser, "test_password", http.StatusUnprocessableEntity},
 		{"invalid user", "POST", "/v1/users", mocks.InvalidUser, "test_password", http.StatusUnprocessableEntity},
+		{"password too long", "POST", "/v1/users", mocks.InactiveUser, "this password is definitely more than 72 bytes long and should fail validation cleanly", http.StatusUnprocessableEntity},
+		{"password too short", "POST", "/v1/users", mocks.InactiveUser, "short", http.StatusUnprocessableEntity},
 	}
 
 	// Execute tests.
