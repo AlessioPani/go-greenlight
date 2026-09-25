@@ -89,9 +89,10 @@ func TestSortColumn(t *testing.T) {
 			}()
 
 			// Checks the results.
-			result := test.filter.sortColumn()
+			result, err := test.filter.sortColumn()
+			if err != nil { t.Fatal(err) }
 			if result != test.expectedResult {
-				t.Errorf("got %s, expected %s", test.filter.sortColumn(), test.expectedResult)
+				t.Errorf("got %s, expected %s", result, test.expectedResult)
 			}
 		})
 	}

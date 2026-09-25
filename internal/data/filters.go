@@ -1,6 +1,7 @@
 package data
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/AlessioPani/go-greenlight/internal/validator"
@@ -16,14 +17,14 @@ type Filters struct {
 
 // sortColumn checks if a column matches one of the entries of the safe list, and returns
 // the string without the hyphen character, if exists.
-func (f Filters) sortColumn() string {
+func (f Filters) sortColumn() (string, error) {
 	for _, safeValue := range f.SortSafeList {
 		if f.Sort == safeValue {
-			return strings.TrimPrefix(f.Sort, "-")
+			return strings.TrimPrefix(f.Sort, "-"), nil
 		}
 	}
 
-	panic("unsafe sort parameter:" + f.Sort)
+	return "", errors.New("unsafe sort parameter: " + f.Sort)
 }
 
 // sortDirection returns the sort direction depending on the prefix character of the Sort field.
