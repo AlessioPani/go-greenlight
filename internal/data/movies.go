@@ -24,11 +24,11 @@ type Movie struct {
 
 // MovieModelInterface defines the movie data operations.
 type MovieModelInterface interface {
-	Insert(movie *Movie) error
-	Get(id int64) (*Movie, error)
-	GetAll(title string, genres []string, filters Filters) ([]*Movie, Metadata, error)
-	Update(movie *Movie) error
-	Delete(id int64) error
+	Insert(ctx context.Context, movie *Movie) error
+	Get(ctx context.Context, id int64) (*Movie, error)
+	GetAll(ctx context.Context, title string, genres []string, filters Filters) ([]*Movie, Metadata, error)
+	Update(ctx context.Context, movie *Movie) error
+	Delete(ctx context.Context, id int64) error
 }
 
 // MovieModel provides access to movie records in the database.
@@ -37,7 +37,7 @@ type MovieModel struct {
 }
 
 // Insert is a method for inserting a new record in the movies table.
-func (m *MovieModel) Insert(movie *Movie) error {
+func (m *MovieModel) Insert(parentContext context.Context, movie *Movie) error {
 	// SQL query for inserting a movie in the db and returning
 	// the system-generated data.
 	query := `INSERT INTO movies (title, year, runtime, genres)
@@ -48,7 +48,7 @@ func (m *MovieModel) Insert(movie *Movie) error {
 	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
 
 	// Create a context with a three-second timeout.
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
 	defer cancel()
 
 	// Executes QueryRow in order to get the system-generated data and returns the error, if any.
@@ -56,7 +56,7 @@ func (m *MovieModel) Insert(movie *Movie) error {
 }
 
 // Get is a method for fetching a specific record from the movies table.
-func (m *MovieModel) Get(id int64) (*Movie, error) {
+func (m *MovieModel) Get(parentContext context.Context, id int64) (*Movie, error) {
 	// Sanitize ID.
 	if id < 1 {
 		return nil, ErrRecordNotFound
@@ -71,7 +71,7 @@ func (m *MovieModel) Get(id int64) (*Movie, error) {
 	movie := Movie{}
 
 	// Create a context with a three-second timeout.
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
 	defer cancel()
 
 	// Executes QueryRow in order to get the record.
@@ -99,7 +99,7 @@ func (m *MovieModel) Get(id int64) (*Movie, error) {
 }
 
 // GetAll retrieves movies matching the supplied filters.
-func (m *MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, Metadata, error) {
+func (m *MovieModel) GetAll(parentContext context.Context, title string, genres []string, filters Filters) ([]*Movie, Metadata, error) {
 	// SQL query to retrieve the requested records.
 	// Uses built-in functionality of Postgres to achieve full-text search with lexemes.
 	sortColumn, err := filters.sortColumn()
@@ -114,7 +114,7 @@ func (m *MovieModel) GetAll(title string, genres []string, filters Filters) ([]*
 						  LIMIT $3 OFFSET $4`, sortColumn, filters.sortDirection())
 
 	// Create a context with a three-second timeout.
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
 	defer cancel()
 
 	// Executes the query.
@@ -161,7 +161,7 @@ func (m *MovieModel) GetAll(title string, genres []string, filters Filters) ([]*
 // condition on an update for a specific record.
 // It updates a record only if the version of the record is the same at
 // the beginning of the request, otherwise returns an ErrEditConflict error.
-func (m *MovieModel) Update(movie *Movie) error {
+func (m *MovieModel) Update(parentContext context.Context, movie *Movie) error {
 	// SQL query for updating a movie record.
 	query := `UPDATE movies
 			  SET title = $1, year = $2, runtime = $3, genres = $4, version = version + 1
@@ -172,7 +172,7 @@ func (m *MovieModel) Update(movie *Movie) error {
 	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres), movie.ID, movie.Version}
 
 	// Create a context with a three-second timeout.
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
 	defer cancel()
 
 	// Executes QueryRow in order to get the system-generated data and returns the error, if any.
@@ -191,7 +191,7 @@ func (m *MovieModel) Update(movie *Movie) error {
 }
 
 // Delete is a method for deleting a specific record from the movies table.
-func (m *MovieModel) Delete(id int64) error {
+func (m *MovieModel) Delete(parentContext context.Context, id int64) error {
 	// Sanitize ID.
 	if id < 1 {
 		return ErrRecordNotFound
@@ -202,7 +202,7 @@ func (m *MovieModel) Delete(id int64) error {
 			  WHERE id = $1`
 
 	// Create a context with a three-second timeout.
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
 	defer cancel()
 
 	// Executes the query.

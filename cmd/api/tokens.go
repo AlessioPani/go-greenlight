@@ -36,7 +36,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 	}
 
 	// Check if there is a matching user in the DB.
-	user, err := app.models.Users.GetByEmail(input.Email)
+	user, err := app.models.Users.GetByEmail(r.Context(), input.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -60,7 +60,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 	}
 
 	// If there is a match between user and password, generate a token.
-	token, err := app.models.Tokens.New(user.ID, 24*time.Hour, data.ScopeAuthentication)
+	token, err := app.models.Tokens.New(r.Context(), user.ID, 24*time.Hour, data.ScopeAuthentication)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -98,7 +98,7 @@ func (app *application) createPasswordResetTokenHandler(w http.ResponseWriter, r
 	}
 
 	// Check if the email is related to an actual user.
-	user, err := app.models.Users.GetByEmail(input.Email)
+	user, err := app.models.Users.GetByEmail(r.Context(), input.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -115,7 +115,7 @@ func (app *application) createPasswordResetTokenHandler(w http.ResponseWriter, r
 	}
 
 	// Otherwise, create a new password reset token with a 45-minute expiry time.
-	token, err := app.models.Tokens.New(user.ID, 45*time.Minute, data.ScopePasswordReset)
+	token, err := app.models.Tokens.New(r.Context(), user.ID, 45*time.Minute, data.ScopePasswordReset)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -134,13 +134,7 @@ func (app *application) createPasswordResetTokenHandler(w http.ResponseWriter, r
 	})
 
 	// Send a 202 Accepted response and confirmation message to the client.
-	env := envelope{"message": "an email will be sent to you containing password reset instructions"}
-
-	err = app.writeJSON(w, http.StatusAccepted, env, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
+	app.tokenRequestAcceptedResponse(w, r)
 }
 
 // createActivationTokenHandler is the handler that generates a new activation token and send it
@@ -167,7 +161,7 @@ func (app *application) createActivationTokenHandler(w http.ResponseWriter, r *h
 	}
 
 	// Check if the email is related to an actual user.
-	user, err := app.models.Users.GetByEmail(input.Email)
+	user, err := app.models.Users.GetByEmail(r.Context(), input.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -185,7 +179,7 @@ func (app *application) createActivationTokenHandler(w http.ResponseWriter, r *h
 	}
 
 	// Create a new activation token.
-	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, data.ScopeActivation)
+	token, err := app.models.Tokens.New(r.Context(), user.ID, 3*24*time.Hour, data.ScopeActivation)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -203,10 +197,5 @@ func (app *application) createActivationTokenHandler(w http.ResponseWriter, r *h
 		}
 	})
 
-	// Send a 202 Accepted response and confirmation message to the client.
-	env := envelope{"message": "an email will be sent to you containing activation instructions"}
-	err = app.writeJSON(w, http.StatusAccepted, env, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-	}
+	app.tokenRequestAcceptedResponse(w, r)
 }

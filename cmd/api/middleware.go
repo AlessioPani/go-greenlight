@@ -125,7 +125,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		}
 
 		// Retrieve the user from the DB by its auth token.
-		user, err := app.models.Users.GetForToken(data.ScopeAuthentication, token)
+		user, err := app.models.Users.GetForToken(r.Context(), data.ScopeAuthentication, token)
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
@@ -189,7 +189,7 @@ func (app *application) requirePermission(code string, next http.HandlerFunc) ht
 		user := app.contextGetUser(r)
 
 		// Get the slice of permissions for the user.
-		permissions, err := app.models.Permissions.GetAllForUser(user.ID)
+		permissions, err := app.models.Permissions.GetAllForUser(r.Context(), user.ID)
 		if err != nil {
 			app.serverErrorResponse(w, r, err)
 			return

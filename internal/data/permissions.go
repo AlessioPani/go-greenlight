@@ -21,8 +21,8 @@ func (p Permissions) Include(code string) bool {
 
 // PermissionModelInterface defines permission data operations.
 type PermissionModelInterface interface {
-	GetAllForUser(userID int64) (Permissions, error)
-	AddForUser(userID int64, codes ...string) error
+	GetAllForUser(ctx context.Context, userID int64) (Permissions, error)
+	AddForUser(ctx context.Context, userID int64, codes ...string) error
 }
 
 // PermissionModel provides access to user permissions.
@@ -32,7 +32,7 @@ type PermissionModel struct {
 
 // GetAllForUser retrieves all permission codes assigned to a
 // user.
-func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
+func (m PermissionModel) GetAllForUser(parentContext context.Context, userID int64) (Permissions, error) {
 	// SQL query to retrieve the user permissions.
 	query := `SELECT permissions.code
 			  FROM permissions
@@ -41,7 +41,7 @@ func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 			  WHERE users.id = $1`
 
 	// Create a context with a three-second timeout.
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
 	defer cancel()
 
 	// Executes the query.
@@ -74,14 +74,14 @@ func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 }
 
 // AddForUser is a method used to add permissions to a user.
-func (m PermissionModel) AddForUser(userID int64, codes ...string) error {
+func (m PermissionModel) AddForUser(parentContext context.Context, userID int64, codes ...string) error {
 	// SQL query to add the requested permissions to the user.
 	query := `INSERT INTO users_permissions
 			  SELECT $1, permissions.id FROM permissions
 			  WHERE permissions.code = ANY($2)`
 
 	// Create a context with a three-second timeout.
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
 	defer cancel()
 
 	// Executes the query.

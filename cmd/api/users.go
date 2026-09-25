@@ -57,7 +57,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Create the user, default permission, and activation token atomically.
-	token, err := app.models.Users.Register(user, 3*24*time.Hour)
+	token, err := app.models.Users.Register(r.Context(), user, 3*24*time.Hour)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrDuplicateEmail):
@@ -116,7 +116,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 
 	// Retrieve the user associated with the token.
 	// If no user has been retrieved, return an error message to the user.
-	user, err := app.models.Users.GetForToken(data.ScopeActivation, input.TokenPlaintext)
+	user, err := app.models.Users.GetForToken(r.Context(), data.ScopeActivation, input.TokenPlaintext)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -131,7 +131,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	// If the token is valid, update the user.
 	user.Activated = true
 
-	err = app.models.Users.Update(user)
+	err = app.models.Users.UpdateAndDeleteTokens(r.Context(), user, data.ScopeActivation)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrEditConflict):
@@ -139,13 +139,6 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
-		return
-	}
-
-	// Delete all activation tokens for the user.
-	err = app.models.Tokens.DeleteAllForUser(data.ScopeActivation, user.ID)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
 		return
 	}
 
@@ -182,7 +175,7 @@ func (app *application) updateUserPasswordHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	user, err := app.models.Users.GetForToken(data.ScopePasswordReset, input.TokenPlaintext)
+	user, err := app.models.Users.GetForToken(r.Context(), data.ScopePasswordReset, input.TokenPlaintext)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -203,7 +196,7 @@ func (app *application) updateUserPasswordHandler(w http.ResponseWriter, r *http
 
 	// Save the updated user record in our database, checking for any edit conflicts as
 	// normal.
-	err = app.models.Users.Update(user)
+	err = app.models.Users.UpdateAndDeleteTokens(r.Context(), user, data.ScopePasswordReset)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrEditConflict):
@@ -211,13 +204,6 @@ func (app *application) updateUserPasswordHandler(w http.ResponseWriter, r *http
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
-		return
-	}
-
-	// If everything was successful, then delete all password reset tokens for the user.
-	err = app.models.Tokens.DeleteAllForUser(data.ScopePasswordReset, user.ID)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
 		return
 	}
 

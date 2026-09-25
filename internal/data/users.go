@@ -5,10 +5,10 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/AlessioPani/go-greenlight/internal/validator"
+	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -36,11 +36,12 @@ func (u *User) IsAnonymous() bool {
 
 // Interface for the user model.
 type UserModelInterface interface {
-	Insert(user *User) error
-	Register(user *User, ttl time.Duration) (*Token, error)
-	Update(user *User) error
-	GetByEmail(email string) (*User, error)
-	GetForToken(tokenScope string, tokenPlaintext string) (*User, error)
+	Insert(ctx context.Context, user *User) error
+	Register(ctx context.Context, user *User, ttl time.Duration) (*Token, error)
+	Update(ctx context.Context, user *User) error
+	UpdateAndDeleteTokens(ctx context.Context, user *User, scope string) error
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	GetForToken(ctx context.Context, tokenScope string, tokenPlaintext string) (*User, error)
 }
 
 // User model struct that wraps a db connection pool.
@@ -49,20 +50,20 @@ type UserModel struct {
 }
 
 // Insert is a method used to add a new user to the User table.
-func (m *UserModel) Insert(user *User) error {
+func (m *UserModel) Insert(parentContext context.Context, user *User) error {
 	query := `INSERT INTO users (name, email, password_hash, activated)
 			  VALUES ($1, $2, $3, $4)
 			  RETURNING id, created_at, version`
 
 	args := []any{user.Name, user.Email, user.Password.hash, user.Activated}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.Version)
 	if err != nil {
 		switch {
-		case strings.Contains(err.Error(), "users_email_key"):
+		case isDuplicateEmail(err):
 			return ErrDuplicateEmail
 		default:
 			return err
@@ -74,8 +75,10 @@ func (m *UserModel) Insert(user *User) error {
 }
 
 // Register atomically creates a user, its default permission, and activation token.
-func (m *UserModel) Register(user *User, ttl time.Duration) (*Token, error) {
-	tx, err := m.DB.Begin()
+func (m *UserModel) Register(parentContext context.Context, user *User, ttl time.Duration) (*Token, error) {
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
+	defer cancel()
+	tx, err := m.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -83,21 +86,29 @@ func (m *UserModel) Register(user *User, ttl time.Duration) (*Token, error) {
 
 	query := `INSERT INTO users (name, email, password_hash, activated)
 	          VALUES ($1, $2, $3, $4) RETURNING id, created_at, version`
-	err = tx.QueryRow(query, user.Name, user.Email, user.Password.hash, user.Activated).Scan(&user.ID, &user.CreatedAt, &user.Version)
+	err = tx.QueryRowContext(ctx, query, user.Name, user.Email, user.Password.hash, user.Activated).Scan(&user.ID, &user.CreatedAt, &user.Version)
 	if err != nil {
-		if strings.Contains(err.Error(), "users_email_key") {
+		if isDuplicateEmail(err) {
 			return nil, ErrDuplicateEmail
 		}
 		return nil, err
 	}
-	if _, err = tx.Exec(`INSERT INTO users_permissions SELECT $1, id FROM permissions WHERE code = $2`, user.ID, "movies:read"); err != nil {
+	result, err := tx.ExecContext(ctx, `INSERT INTO users_permissions SELECT $1, id FROM permissions WHERE code = $2`, user.ID, "movies:read")
+	if err != nil {
 		return nil, err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if rowsAffected != 1 {
+		return nil, errors.New("default movies:read permission is missing")
 	}
 	token, err := generateToken(user.ID, ttl, ScopeActivation)
 	if err != nil {
 		return nil, err
 	}
-	if _, err = tx.Exec(`INSERT INTO tokens (hash, user_id, expiry, scope) VALUES ($1, $2, $3, $4)`, token.Hash, token.UserID, token.Expiry, token.Scope); err != nil {
+	if _, err = tx.ExecContext(ctx, `INSERT INTO tokens (hash, user_id, expiry, scope) VALUES ($1, $2, $3, $4)`, token.Hash, token.UserID, token.Expiry, token.Scope); err != nil {
 		return nil, err
 	}
 	if err = tx.Commit(); err != nil {
@@ -107,14 +118,14 @@ func (m *UserModel) Register(user *User, ttl time.Duration) (*Token, error) {
 }
 
 // GetByEmail is a method used to retrieve a user by its email.
-func (m *UserModel) GetByEmail(email string) (*User, error) {
+func (m *UserModel) GetByEmail(parentContext context.Context, email string) (*User, error) {
 	query := `SELECT id, created_at, name, email, password_hash, activated, version
 			  FROM users
 			  WHERE email = $1`
 
 	var user User
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, email).Scan(&user.ID, &user.CreatedAt, &user.Name, &user.Email, &user.Password.hash, &user.Activated, &user.Version)
@@ -131,13 +142,13 @@ func (m *UserModel) GetByEmail(email string) (*User, error) {
 }
 
 // Update is a method used to update a user in the database.
-func (m *UserModel) Update(user *User) error {
+func (m *UserModel) Update(parentContext context.Context, user *User) error {
 	query := `UPDATE users
 			  SET name = $1, email = $2, password_hash = $3, activated = $4, version = version + 1
 			  WHERE id = $5 AND version = $6
 			  RETURNING version`
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
 	defer cancel()
 
 	args := []any{user.Name, user.Email, user.Password.hash, user.Activated, user.ID, user.Version}
@@ -145,7 +156,7 @@ func (m *UserModel) Update(user *User) error {
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.Version)
 	if err != nil {
 		switch {
-		case strings.Contains(err.Error(), "users_email_key"):
+		case isDuplicateEmail(err):
 			return ErrDuplicateEmail
 		case errors.Is(err, sql.ErrNoRows):
 			return ErrEditConflict
@@ -157,8 +168,41 @@ func (m *UserModel) Update(user *User) error {
 	return nil
 }
 
+// UpdateAndDeleteTokens updates a user and revokes tokens in one transaction.
+func (m *UserModel) UpdateAndDeleteTokens(parentContext context.Context, user *User, scope string) error {
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
+	defer cancel()
+	tx, err := m.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	query := `UPDATE users SET name = $1, email = $2, password_hash = $3, activated = $4, version = version + 1
+	          WHERE id = $5 AND version = $6 RETURNING version`
+	err = tx.QueryRowContext(ctx, query, user.Name, user.Email, user.Password.hash, user.Activated, user.ID, user.Version).Scan(&user.Version)
+	if err != nil {
+		if isDuplicateEmail(err) {
+			return ErrDuplicateEmail
+		}
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrEditConflict
+		}
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, `DELETE FROM tokens WHERE scope = $1 AND user_id = $2`, scope, user.ID); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func isDuplicateEmail(err error) bool {
+	var pqErr *pq.Error
+	return errors.As(err, &pqErr) && pqErr.Code == "23505" && pqErr.Constraint == "users_email_key"
+}
+
 // GetForToken is a method used to get a user from a token specified in input.
-func (m *UserModel) GetForToken(tokenScope string, tokenPlaintext string) (*User, error) {
+func (m *UserModel) GetForToken(parentContext context.Context, tokenScope string, tokenPlaintext string) (*User, error) {
 	// Get the hashed token.
 	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
 
@@ -170,7 +214,7 @@ func (m *UserModel) GetForToken(tokenScope string, tokenPlaintext string) (*User
 			  AND tokens.scope = $2
 			  AND tokens.expiry > $3`
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentContext, 3*time.Second)
 	defer cancel()
 
 	var user User

@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
@@ -49,7 +50,7 @@ var metadata = data.Metadata{
 type MovieModel struct{}
 
 // Method used for mocking the Insert method for the Movie model.
-func (m *MovieModel) Insert(movie *data.Movie) error {
+func (m *MovieModel) Insert(_ context.Context, movie *data.Movie) error {
 	if movie.Title == ErrorMovie.Title {
 		return errors.New("db error")
 	}
@@ -58,7 +59,7 @@ func (m *MovieModel) Insert(movie *data.Movie) error {
 }
 
 // Method used for mocking the Get method for the Movie model.
-func (m *MovieModel) Get(id int64) (*data.Movie, error) {
+func (m *MovieModel) Get(_ context.Context, id int64) (*data.Movie, error) {
 	switch id {
 	case 1:
 		return &ValidMovie, nil
@@ -74,7 +75,7 @@ func (m *MovieModel) Get(id int64) (*data.Movie, error) {
 }
 
 // Method used for mocking the GetAll method for the Movie model.
-func (m *MovieModel) GetAll(title string, genres []string, filters data.Filters) ([]*data.Movie, data.Metadata, error) {
+func (m *MovieModel) GetAll(_ context.Context, title string, genres []string, filters data.Filters) ([]*data.Movie, data.Metadata, error) {
 	if strings.Contains(strings.ToLower(ErrorMovie.Title), strings.ToLower(title)) {
 		return nil, data.Metadata{}, errors.New("server error")
 	}
@@ -83,7 +84,7 @@ func (m *MovieModel) GetAll(title string, genres []string, filters data.Filters)
 }
 
 // Method used for mocking the Update method for the Movie model.
-func (m *MovieModel) Update(movie *data.Movie) error {
+func (m *MovieModel) Update(_ context.Context, movie *data.Movie) error {
 	if movie.ID == ErrorMovie.ID {
 		return data.ErrEditConflict
 	}
@@ -92,7 +93,7 @@ func (m *MovieModel) Update(movie *data.Movie) error {
 }
 
 // Method used for mocking the Delete method for the Movie model.
-func (m *MovieModel) Delete(id int64) error {
+func (m *MovieModel) Delete(_ context.Context, id int64) error {
 	if id == 4 {
 		return data.ErrRecordNotFound
 	}

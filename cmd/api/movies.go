@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -49,7 +51,7 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Insert the movie into the db and check for errors.
-	err = app.models.Movies.Insert(movie)
+	err = app.models.Movies.Insert(r.Context(), movie)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -78,7 +80,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Retrieve the movie and handle any errors.
-	movie, err := app.models.Movies.Get(id)
+	movie, err := app.models.Movies.Get(r.Context(), id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -110,7 +112,7 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 
 	// Fetch the existing movie record from the database, sending a 404 Not Found
 	// response to the client if we couldn't find a matching record.
-	movie, err := app.models.Movies.Get(id)
+	movie, err := app.models.Movies.Get(r.Context(), id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -130,15 +132,12 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	// Declare an input struct to hold the expected data from the client.
-	// Pointers are for a partial update of a record.
-	// If a field is not in the request body, its zero-value is nil and can
-	// be checked.
+	// Raw JSON fields distinguish omitted fields from explicit null values.
 	var input struct {
-		Title   *string       `json:"title"`
-		Year    *int32        `json:"year"`
-		Runtime *data.Runtime `json:"runtime"`
-		Genres  []string      `json:"genres"`
+		Title   json.RawMessage `json:"title"`
+		Year    json.RawMessage `json:"year"`
+		Runtime json.RawMessage `json:"runtime"`
+		Genres  json.RawMessage `json:"genres"`
 	}
 
 	// Read the JSON request body data into the input struct.
@@ -147,20 +146,40 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		app.badRequestResponse(w, r, err)
 		return
 	}
+	for field, raw := range map[string]json.RawMessage{
+		"title": input.Title, "year": input.Year, "runtime": input.Runtime, "genres": input.Genres,
+	} {
+		if len(raw) > 0 && bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
+			app.badRequestResponse(w, r, fmt.Errorf("field %q must not be null", field))
+			return
+		}
+	}
 
 	// Copy the values from the request body to the appropriate fields of the movie
 	// record.
-	if input.Title != nil {
-		movie.Title = *input.Title
+	if len(input.Title) > 0 {
+		if err := json.Unmarshal(input.Title, &movie.Title); err != nil {
+			app.badRequestResponse(w, r, err)
+			return
+		}
 	}
-	if input.Year != nil {
-		movie.Year = *input.Year
+	if len(input.Year) > 0 {
+		if err := json.Unmarshal(input.Year, &movie.Year); err != nil {
+			app.badRequestResponse(w, r, err)
+			return
+		}
 	}
-	if input.Runtime != nil {
-		movie.Runtime = *input.Runtime
+	if len(input.Runtime) > 0 {
+		if err := json.Unmarshal(input.Runtime, &movie.Runtime); err != nil {
+			app.badRequestResponse(w, r, err)
+			return
+		}
 	}
-	if input.Genres != nil {
-		movie.Genres = input.Genres
+	if len(input.Genres) > 0 {
+		if err := json.Unmarshal(input.Genres, &movie.Genres); err != nil {
+			app.badRequestResponse(w, r, err)
+			return
+		}
 	}
 
 	// Validate the updated movie record, sending the client a 422 Unprocessable Entity
@@ -173,7 +192,7 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 
 	// Pass the updated movie record to the Update() method and checks
 	// for errors.
-	err = app.models.Movies.Update(movie)
+	err = app.models.Movies.Update(r.Context(), movie)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrEditConflict):
@@ -205,7 +224,7 @@ func (app *application) deleteMovieHandler(w http.ResponseWriter, r *http.Reques
 
 	// Delete the movie from the database, sending a 404 Not Found response to the
 	// client if there isn't a matching record.
-	err = app.models.Movies.Delete(id)
+	err = app.models.Movies.Delete(r.Context(), id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -253,7 +272,7 @@ func (app *application) listMovieHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// If validation is ok, retrieve movies.
-	movies, metadata, err := app.models.Movies.GetAll(input.Title, input.Genres, input.Filter)
+	movies, metadata, err := app.models.Movies.GetAll(r.Context(), input.Title, input.Genres, input.Filter)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

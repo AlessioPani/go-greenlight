@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -33,7 +34,7 @@ var passToken = data.Token{
 
 type TokenModel struct{}
 
-func (t *TokenModel) New(userID int64, ttl time.Duration, scope string) (*data.Token, error) {
+func (t *TokenModel) New(_ context.Context, userID int64, ttl time.Duration, scope string) (*data.Token, error) {
 	if userID == 5 {
 		return nil, errors.New("while generating a token")
 	}
@@ -50,11 +51,11 @@ func (t *TokenModel) New(userID int64, ttl time.Duration, scope string) (*data.T
 	}
 }
 
-func (t *TokenModel) Insert(token *data.Token) error {
+func (t *TokenModel) Insert(_ context.Context, token *data.Token) error {
 	return nil
 }
 
-func (t *TokenModel) DeleteAllForUser(scope string, userID int64) error {
+func (t *TokenModel) DeleteAllForUser(_ context.Context, scope string, userID int64) error {
 	if scope == data.ScopeActivation && userID == ActiveUser.ID {
 		return data.ErrRecordNotFound
 	}

@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	"github.com/AlessioPani/go-greenlight/internal/data"
 )
 
@@ -9,7 +10,7 @@ var movieWritePermission = data.Permissions{"movies:read", "movies:write"}
 
 type PermissionModel struct{}
 
-func (p PermissionModel) GetAllForUser(userID int64) (data.Permissions, error) {
+func (p PermissionModel) GetAllForUser(_ context.Context, userID int64) (data.Permissions, error) {
 	switch userID {
 	case 1:
 		return movieReadPermission, nil
@@ -20,6 +21,6 @@ func (p PermissionModel) GetAllForUser(userID int64) (data.Permissions, error) {
 	}
 }
 
-func (p PermissionModel) AddForUser(userID int64, codes ...string) error {
+func (p PermissionModel) AddForUser(_ context.Context, userID int64, codes ...string) error {
 	return nil
 }
