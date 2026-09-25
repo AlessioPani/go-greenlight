@@ -96,6 +96,7 @@ func TestActivateUserHandler(t *testing.T) {
 			{"valid token", "PUT", "/v1/users/activated", "validtoken1234567890token0", http.StatusOK},
 			{"invalid token", "PUT", "/v1/users/activated", "", http.StatusUnprocessableEntity},
 			{"expired token", "PUT", "/v1/users/activated", "expiredtoken123456789token", http.StatusUnprocessableEntity},
+			{"edit conflict", "PUT", "/v1/users/activated", "validtokeninvaliduser12345", http.StatusConflict},
 		}
 
 		// Execute tests.
@@ -139,6 +140,15 @@ func TestActivateUserHandler(t *testing.T) {
 	}
 }
 
+func TestContextGetUserPanicsWhenMissing(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("expected panic when user is absent from request context")
+		}
+	}()
+	newTestApplication().contextGetUser(httptest.NewRequest(http.MethodGet, "/", nil))
+}
+
 // Test updateUserPasswordHandler.
 func TestUpdateUserPasswordHandler(t *testing.T) {
 	// Get test application config and handler.
@@ -156,6 +166,8 @@ func TestUpdateUserPasswordHandler(t *testing.T) {
 	}{
 		{"valid password", "PUT", "/v1/users/password", "valid_password", "validtoken1234567890token0", http.StatusOK},
 		{"invalid password", "PUT", "/v1/users/password", "", "", http.StatusUnprocessableEntity},
+		{"expired token", "PUT", "/v1/users/password", "valid_password", "expiredtoken123456789token", http.StatusUnprocessableEntity},
+		{"edit conflict", "PUT", "/v1/users/password", "valid_password", "validtokeninvaliduser12345", http.StatusConflict},
 	}
 
 	// Execute tests.

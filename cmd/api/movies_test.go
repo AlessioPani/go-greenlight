@@ -192,6 +192,35 @@ func TestUpdateMovieHandler(t *testing.T) {
 	}
 }
 
+func TestUpdateMovieHandlerPartialAndInvalidPayloads(t *testing.T) {
+	tests := []struct {
+		name            string
+		body            string
+		expectedVersion string
+		wantStatus      int
+	}{
+		{"no fields", `{}`, "1", http.StatusOK},
+		{"null field", `{"title":null}`, "1", http.StatusBadRequest},
+		{"wrong field type", `{"year":"not a year"}`, "1", http.StatusBadRequest},
+		{"version mismatch", `{}`, "2", http.StatusConflict},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPatch, "/v1/movies/1", bytes.NewBufferString(tt.body))
+			req = req.WithContext(context.WithValue(req.Context(), userContextKey, mocks.ActiveUser))
+			req.Header.Set("Authorization", "Bearer 12345678901234567890123456")
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("X-Expected-Version", tt.expectedVersion)
+			req.RemoteAddr = "localhost:8080"
+			rr := httptest.NewRecorder()
+			newTestApplication().routes().ServeHTTP(rr, req)
+			if rr.Code != tt.wantStatus {
+				t.Fatalf("status %d, want %d; body %s", rr.Code, tt.wantStatus, rr.Body.String())
+			}
+		})
+	}
+}
+
 // Test method used for the deleteMovieHandler http.Handler.
 func TestDeleteMovieHandler(t *testing.T) {
 	// Get test application config and handler.
